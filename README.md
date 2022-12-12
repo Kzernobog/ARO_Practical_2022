@@ -14,7 +14,6 @@ $ cd ./ARO_Practical_2022
 </p>
 
 ## Setting up the environment:
-NOTE: This lab is only guaranteed to work with Ubuntu 20.04
 From here, you should be under ./ARO_Practical_2022 directory.
 
 ### Option 1: Setup with conda

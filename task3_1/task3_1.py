@@ -9,6 +9,7 @@ root_path = abs_path + '/..'
 core_path = root_path + '/core'
 sys.path.append(core_path)
 from Pybullet_Simulation import Simulation
+# from core.Pybullet_Simulation import Simulation
 
 # specific settings for this task
 
@@ -40,7 +41,7 @@ robotConfigs = {
     "robotPIDConfigs": core_path + "/PD_gains.yaml",
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
-    "fixedBase": False,
+    "fixedBase": True,
     "colored": False
 }
 
@@ -90,6 +91,35 @@ def getReadyForTask():
 
 
 def solution():
+    # TODO: Move the LHAND5 .
+    # STATUS: `move_without_PD` seems to be moving the end-effector.
+    # `move_with_PD` behavews erratically.
+
+    # targetPosition = [0.33, 0, 1.20]
+    endEffector = "LARM_JOINT5"
+    temp = sim.getJointPosition(endEffector, sourceFrame='world') + np.array([0.0,
+                                                                         0.1, 0.2])
+    targetPosition = temp
+    # targetPosition = finalTargetPos
+    targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
+    # targetOrientation = sim.p.getQuaternionFromEuler(sim.getJointOrientation(endEffector, sourceFrame='world'))
+    # baseFrame = 'world'
+    baseFrame = 'CHEST_JOINT0'
+    interpSteps = 100
+    controlFrequency = 1000
+    sim.move_with_PD(endEffector,
+                     targetPosition,
+                     interpSteps,
+                     controlFrequency,
+                     baseFrame,
+                     targetOrientation=targetOrientation
+                    )
+    # sim.move_with_PD(endEffector,
+    #                  targetPosition,
+    #                  interpSteps,
+    #                  controlFrequency,
+    #                  baseFrame
+    #                 )
     pass
 
 tableId, cubeId, targetId = getReadyForTask()

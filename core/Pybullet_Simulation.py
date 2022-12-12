@@ -8,8 +8,24 @@ import math
 import re
 import time
 import yaml
+import sys
 
 from Pybullet_Simulation_base import Simulation_base
+# FIX: controlling for orientation is absolutely shit! needs to be debugged
+# TEST: is `move_without_PD` working with orientation control
+# FAIL: getting wierd configurations
+# TEST: tested with better target positions and target orientations
+# PASS:
+# TEST: `move_with_PD` still misbehaving
+# FAIL:
+
+# FIX: get_kinematic_chain is being called too many times, maybe make it a
+# class variable
+# FIX: maybe change the 'base_to_waist' frames translation from [0,0,0] to
+# [0,0,0.85]. As of now this is hard coded in the forward kinematics
+# QUE: Am i computing the transformation matrices to many times? keep in mind
+# that every time i call `getJointLocationAndOrientation` i am computing the
+# transformation matrices of all joints in the kinematic chain.
 
 class Simulation(Simulation_base):
     """A Bullet simulation involving Nextage robot"""
@@ -28,6 +44,8 @@ class Simulation(Simulation_base):
         self.target_robot_configuration = {}
         self.current_joint_velocities = {}
         self.previous_robot_configuration = {}
+        self.rest_robot_configuration = {}
+        self.initialised = False
 
         # initialise the integral in the PID controller
         self.integral = 0
@@ -103,11 +121,22 @@ class Simulation(Simulation_base):
     def get_kinematic_chain(
         self,
         jointName,
-        source_frame="world"):
-        """
-        retrieves the suitable kinematic chain that the endeffector is a part
-        of. If the source frame is anything but world frame you have a
-        different chain you need to return
+        sourceFrame):
+        """Returns kinematic chain
+
+        Retrieves the suitable kinematic chain that the endeffector is a part
+        of. If the source frame is anything but `world` frame you have a
+        different chain you need to return. Specify source joint name according
+        to naming in the coursework assignment document
+
+        @param jointName: The joint whose kinematic chain needs to be known
+        @type jointName: str
+        @param sourceFrame: The frame w.r.t which the kinematic chain
+        transformations are being estimated
+        @type sourceFrame: str
+        @returns kinematic_chain: The entire kinematic chain from source_frame
+        @rtype: list(str)
+        to jointName
         """
 
         # if jointName == "CHEST_JOINT0":
@@ -119,9 +148,9 @@ class Simulation(Simulation_base):
                 kinematic_chain = kinematic_chain + chain[:chain.index(jointName)+1]
                 break
 
-        if source_frame != "world":
+        if sourceFrame != "world":
             kinematic_chain = kinematic_chain[
-                kinematic_chain.index(source_frame)+1: ]
+                kinematic_chain.index(sourceFrame)+1: ]
 
         return kinematic_chain
 
@@ -196,138 +225,181 @@ class Simulation(Simulation_base):
 
         return transformationMatrices
 
-    def getJointLocationAndOrientation(self, jointName):
-        """
-            Returns the position and rotation matrix of a given joint using Forward Kinematics
-            according to the topology of the Nextage robot.
-        """
-        # Remember to multiply the transformation matrices following the kinematic chain for each arm.
-        # Hint: return two numpy arrays, a 3x1 array for the position vector,
-        # and a 3x3 array for the rotation matrix
-        #return pos, rotmat
+    def getJointLocationAndOrientation(self, jointName, sourceFrame):
+        """Estimate position and Rotation matrix w.r.t source frame
 
-        # TODO transformation matrices are computed everytime a joint's
-        # position is estimated.
+        Returns the position and rotation matrix of a given joint using
+        Forward Kinematics w.r.t the given source frame. This is accordance
+        witht he topology of the Nextage robot
+
+        Args:
+            @param jointName (str): name of the joint whose transformation
+            needs to be estimated
+            @param sourceFrame (str): name of the source joint/frame w.r.t
+            which the transformation needs to be estimated.
+        Returns:
+            position (np.ndarray): position of the joint named `jointName`
+            orientation (np.ndarray): orientation of the joint named
+            `jointName`
+        """
         transformation_matrices = self.getTransformationMatrices()
 
         transformation = np.identity(4)
-        transformation[2, 3] = 0.85
 
-        kinematic_chain = self.get_kinematic_chain(jointName)
+        # since we start with the `base_to_waist` frame this transformation
+        # needs to be done
+        if sourceFrame == 'world':
+            transformation[2, 3] = 0.85
+
+        kinematic_chain = self.get_kinematic_chain(jointName, sourceFrame)
 
         # check which kinematic tree the given joint exists in, accordingly
         # descend down that tree computing transformation 
         for joint in kinematic_chain:
             transformation = transformation @ transformation_matrices[joint]
 
-        # if jointName in self.headchain.keys():
-        #     for item in self.headchain.keys():
-        #         print("multiplication order: {}".format(item))
-        #         transformation = np.matmul(transformation,
-        #                                    transformation_matrices[item])
-        #         if item == jointName:
-        #             break
-        # elif jointName in self.rightchain.keys():
-        #     for item in self.rightchain.keys():
-        #         print("multiplication order: {}".format(item))
-        #         transformation = np.matmul(transformation,
-        #                                    transformation_matrices[item])
-        #         if item == jointName:
-        #             break
-        # elif jointName in self.leftchain.keys():
-        #     for item in self.leftchain.keys():
-        #         print("multiplication order: {}".format(item))
-        #         # transformation = np.matmul(transformation,
-        #         #                            transformation_matrices[item])
-        #         transformation = np.matmul(transformation_matrices[item],
-        #                                    transformation)
-        #         if item == jointName:
-        #             break
-
-        print("transformation: {}".format(transformation))
-        rotmat = transformation[:3, :3]
+        rotmat = npRotation.from_matrix(transformation[:3, :3]).as_matrix()
         pos = transformation[:3, 3]
-
-
 
         return pos, rotmat
 
-    def getJointPosition(self, jointName):
-        """Get the position of a joint in the world frame, leave this unchanged please."""
-        return self.getJointLocationAndOrientation(jointName)[0]
+    def getTransformationMatrix(self, jointName, sourceFrame):
+        """Gets the transformation matrix of the specified joint
 
-    def getJointOrientation(self, jointName, ref=None):
-        """Get the orientation of a joint in the world frame, leave this unchanged please."""
+        Returns the transformatoin matrix of a given joint using
+        Forward Kinematics w.r.t the given source frame. This is accordance
+        witht he topology of the Nextage robot
+
+        Args:
+            @param jointName (str): name of the joint whose transformation
+            needs to be estimated
+            @param sourceFrame (str): name of the source joint/frame w.r.t
+            which the transformation needs to be estimated.
+        Returns:
+            transformation (np.ndarray): transformation of the joint named `jointName`
+        """
+        transformation_matrices = self.getTransformationMatrices()
+
+        transformation = np.identity(4)
+
+        # since we start with the `base_to_waist` frame this transformation
+        # needs to be done
+        if sourceFrame == 'world':
+            transformation[2, 3] = 0.85
+
+        kinematic_chain = self.get_kinematic_chain(jointName, sourceFrame)
+
+        # check which kinematic tree the given joint exists in, accordingly
+        # descend down that tree computing transformation 
+        for joint in kinematic_chain:
+            transformation = transformation @ transformation_matrices[joint]
+
+        return transformation
+
+    def getJointPosition(self, jointName, sourceFrame):
+        """Get the position of a joint in the source frame
+
+        retrieves the 3D position in the world frame
+
+        Args:
+            @param jointName (str): name of the joint as a string
+        Returns:
+            @returns (np.ndarray)
+        """
+        return self.getJointLocationAndOrientation(jointName, sourceFrame=sourceFrame)[0]
+
+    def getJointOrientation(self, jointName, sourceFrame, ref=None):
+        """Get the orientation of a joint in the source frame
+
+        retrieves the 3D rotation matrix in the world frame
+
+        Args:
+            @param jointName (str): name of the joint as a string
+            @param sourceFrame (str): name of the frame w.r.t which the
+            transformation needs to be computed
+        Returns:
+            @returns (np.ndarray)
+        """
         if ref is None:
-            return np.array(self.getJointLocationAndOrientation(jointName)[1] @ self.refVector).squeeze()
+            return np.array(self.getJointLocationAndOrientation(jointName,
+                                                                sourceFrame=sourceFrame)[1] @ self.refVector).squeeze()
         else:
-            return np.array(self.getJointLocationAndOrientation(jointName)[1] @ ref).squeeze()
+            return np.array(self.getJointLocationAndOrientation(jointName,
+                                                                sourceFrame=sourceFrame)[1] @ ref).squeeze()
 
-    def getJointAxis(self, jointName):
-        """Get the orientation of a joint in the world frame, leave this unchanged please."""
-        return np.array(self.getJointLocationAndOrientation(jointName)[1] @ self.jointRotationAxis[jointName]).squeeze()
+    def getJointAxis(self, jointName, sourceFrame):
+        """Get the orientation of a joint in the source frame
 
-    def jacobianMatrix(self, endEffector):
-        """Calculate the Jacobian Matrix for the Nextage Robot."""
-        # You can implement the cross product yourself or use calculateJacobian().
-        # Hint: you should return a numpy array for your Jacobian matrix. The
-        # size of the matrix will depend on your chosen convention. You can have
-        # a 3xn or a 6xn Jacobian matrix, where 'n' is the number of joints in
-        # your kinematic chain.
-        # return np.array()
+        retrieves the axis around which rotations happen w.r.t the source frame
 
-        # estimate transformation matrices in all kinematic chains
-        # iterate through joints
-        # accumulate position Jacobian
-        # accumulate orientation Jacobian
-        # concatenate into matrix column
+        Args:
+            @param jointName (str): name of the joint as a string
+            @param sourceFrame (str): name of the frame w.r.t which the
+            transformation needs to be computed
+        Returns:
+            @returns (np.ndarray)
+
+        """
+        return np.array(self.getJointLocationAndOrientation(jointName,
+                                                            sourceFrame=sourceFrame)[1] @ self.jointRotationAxis[jointName]).squeeze()
+
+    def jacobianMatrix(self,
+                       endEffector,
+                       sourceFrame):
+        """Calculates the Jacobian of the specified chain
+
+        Takes the end effector and source frame and computes the jacobian of
+        the kinematic chain connecting them
+
+        Args:
+            endEffector (str): name of the end effector joint
+            sourceFrame (str): name of the source joint
+        Returns:
+            jacobianMatrix (np.ndarray)
+        """
+        # NOTE: The jacobian (theoreticallty speaking) is a 1st order
+        # partial differential of a vector valued function. Each column
+        # represents a joint in the kinematic chain.
+
+        # NOTE: difference between `getJointOrientation` and `getJointAxis` -
+        # same except that `getJointOrientation` multiplies with a standard
+        # reference vector and `getJointAxis` multiplies with the corresponding
+        # joint axis
         position_jacobian = []
         orientation_jacobian = []
 
-        kinematic_chain = self.get_kinematic_chain(endEffector)
+        kinematic_chain = self.get_kinematic_chain(endEffector,
+                                                   sourceFrame=sourceFrame)
 
-        p_eff = self.getJointPosition(endEffector)
-        a_eff = self.getJointAxis(endEffector)
+        p_eff = self.getJointPosition(endEffector,
+                                      sourceFrame=sourceFrame)
+        # DEBG: use `getJointOrientation` instead
+
+        a_eff = self.getJointAxis(endEffector,
+                                  sourceFrame=sourceFrame)
+        # a_eff = self.getJointOrientation(endEffector,
+        #                                  sourceFrame=sourceFrame)
 
         for joint in kinematic_chain:
-            p_i = self.getJointPosition(joint)
-            a_i = self.getJointAxis(joint)
+            p_i = self.getJointPosition(joint,
+                                        sourceFrame=sourceFrame)
+            # a_i = self.getJointOrientation(joint,
+            #                                sourceFrame=sourceFrame)
+            a_i = self.getJointAxis(joint,
+                                    sourceFrame=sourceFrame)
 
             J_pos = np.cross(a_i, (p_eff - p_i))
+
+            # DEBG: peter's old code just takes the joint axis as the jacobian
+
             J_ori = np.cross(a_i, a_eff)
+            # J_ori = a_i
 
             position_jacobian.append(J_pos)
             orientation_jacobian.append(J_ori)
 
-        # if endEffector in self.leftchain.keys():
-        #     p_eff, end_rot = self.getJointLocationAndOrientation(endEffector)
-        #     for item in self.leftchain.keys():
-        #         p_i, rotmat = self.getJointLocationAndOrientation(item)
-        #         a_i = rotmat @ self.jointRotationAxis[item]
-        #         a_eff = end_rot @ self.jointRotationAxis[endEffector]
-        #         J_pos = np.cross(a_i, (p_eff - p_i))
-        #         J_ori = np.cross(a_i, a_eff)
-        #         # jacobian.append(np.hstack((J_pos, J_ori)))
-        #         position_jacobian.append(J_pos)
-        #         orientation_jacobian.append(J_ori)
-        # elif endEffector in self.rightchain.keys():
-        #     p_eff, end_rot = self.getJointLocationAndOrientation(endEffector)
-        #     for item in self.rightchain.keys():
-        #         # pos, rotmat = self.getJointLocationAndOrientation(item)
-        #         # J_pos = np.cross(self.jointRotationAxis[item], (end_pos - pos))
-        #         # J_ori = np.cross(self.jointRotationAxis[item], end_rot @
-        #         #                      self.jointRotationAxis[endEffector])
-        #         p_i, rotmat = self.getJointLocationAndOrientation(item)
-        #         a_i = rotmat @ self.jointRotationAxis[item]
-        #         a_eff = end_rot @ self.jointRotationAxis[endEffector]
-        #         J_pos = np.cross(a_i, (p_eff - p_i))
-        #         J_ori = np.cross(a_i, a_eff)
-        #         # jacobian.append(np.hstack((J_pos, J_ori)))
-        #         position_jacobian.append(J_pos)
-        #         orientation_jacobian.append(J_ori)
-
-
         return np.asarray(position_jacobian).T, np.asarray(orientation_jacobian).T
+
     # Task 1.2 Inverse Kinematics
 
     def inverseKinematics(
@@ -338,18 +410,31 @@ class Simulation(Simulation_base):
         interpolationSteps,
         maxIterPerStep,
         threshold,
-        orientation_jacobian=False):
-        """Your IK solver \\
-        Arguments: \\
-            endEffector: the jointName the end-effector \\
-            targetPosition: final destination the the end-effector \\
-            orientation: the desired orientation of the end-effector
-                         together with its parent link \\
-            interpolationSteps: number of interpolation steps
-            maxIterPerStep: maximum iterations per step
-            threshold: accuracy threshold
-        Return: \\
-            Vector of x_refs
+        sourceFrame,
+        oriJacob=False):
+        """Inverse Kinematics solver
+
+
+        Takes in the end effector joint name and its corresponding target
+        position, constructs the corresponding position jacobian inverse and multiplies
+        it with the change in position. If a target orientation is given, then
+        it constructs the orientation vector jacobian
+        NOTE: This solver assumes that the interpolation happens outside this
+        function. Hence, the target position(and orientation) is the next
+        point in a series of interpolation steps
+
+        Returns a dq - delta in the configuration of the joints in the
+        corresopnding kinematic chain
+
+        Args:
+            endEffector (str): name of the end effector joint
+            targetPosition (list(float)): target position of given end-effector
+            targetOrientation (list(float)): target orientation of end-effector
+            oriJacob (bool): flag for considering orientation or not
+        Returns:
+            dq (list(floats)): change in configuration of the kinematic chain.
+            The length should be equal to length of the kinematic chain from
+            source frame to end effector
         """
         # intermediate source frame
 
@@ -358,17 +443,26 @@ class Simulation(Simulation_base):
         # positions for all joints after performing inverse kinematics.
         # takes in next step in interpolation and returns the dq required to
         # move the endeffector to the targetposition
-        J_pos, J_ori = self.jacobianMatrix(endEffector)
-        if orientation_jacobian:
-            jacobian = np.hstack((J_pos, J_ori))
-            trans_delta = targetPosition - self.getJointPosition(endEffector)
-            ori_delta = targetOrientation - self.getJointOrientation(endEffector)
+        J_pos, J_ori = self.jacobianMatrix(endEffector, sourceFrame=sourceFrame)
+        if oriJacob:
+            jacobian = np.vstack((J_pos, J_ori))
+            trans_delta = targetPosition - self.getJointPosition(endEffector,
+                                                                 sourceFrame=sourceFrame)
+            current_ori = self.getJointOrientation(endEffector,
+                                                   sourceFrame=sourceFrame)
+            ori_delta = targetOrientation - current_ori
             dy = np.hstack((trans_delta, ori_delta))
         else:
             jacobian = J_pos
-            dy = targetPosition - self.getJointPosition(endEffector)
+            dy = targetPosition - self.getJointPosition(endEffector,
+                                                        sourceFrame=sourceFrame)
 
-        dq = np.linalg.pinv(jacobian) @ dy
+        # DEBG: 
+        print("dy shape: {}".format(dy.shape))
+        print("jacobian shape: {}".format(jacobian.shape))
+        J_inv = np.linalg.pinv(jacobian)
+        print("jacobian inverse:{}".format(J_inv.shape))
+        dq = J_inv @ dy
 
         return dq
 
@@ -378,7 +472,8 @@ class Simulation(Simulation_base):
         targetPosition,
         interpolationSteps,
         speed=0.01,
-        orientation=None,
+        sourceFrame='world',
+        targetOrientation=None,
         threshold=1e-3,
         maxIter=3000,
         debug=False,
@@ -390,27 +485,51 @@ class Simulation(Simulation_base):
             pltTime, pltDistance arrays used for plotting
         """
 
-        # iterate through joints and update joint states based on IK solver
+        # intialise for graphing
         pltTime = []
         pltDistance = []
 
-        # which kinematic chain does it belong to
-        kinematic_chain = self.get_kinematic_chain(endEffector)
+        # which kinematic chain does the end effector belong to
+        kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
 
         # intialise the end effector position
-        EF_init_pos = self.getJointPosition(endEffector)
-        EF_init_ori = self.getJointOrientation(endEffector)
+        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(endEffector,
+                                                                     sourceFrame)
+
+        # NOTE: the target position and orientations are given in the
+        # world frame `W`. In order for the jacobian to be applied on the right
+        # `dy` the target position and orientation needs to be transformed to
+        # the source frame. Change the target's source frame
+        if sourceFrame == 'world':
+            p_ST_S = targetPosition
+            if targetOrientation is not None:
+                R_ST = npRotation.from_quat(targetOrientation).as_matrix()
+        else:
+            # estimate transformation between `S` and `W`
+            X_WS = self.getTransformationMatrix(sourceFrame, 'world')
+            X_SW = np.linalg.inv(X_WS)
+            if targetOrientation is not None:
+                # DOUBT: is this a proper rotation?
+                R_SW = npRotation.from_matrix(X_SW[:3, :3]).as_matrix()
+                R_WT = npRotation.from_quat(targetOrientation).as_matrix()
+                R_ST = R_SW @ R_WT # rotation between source and target
+            p_ST_S = X_SW @ np.hstack((targetPosition, [1]))
+            p_ST_S = p_ST_S[:3]
+
 
         # Linear interpolation in the end-effector space
-        translation_steps = np.linspace(EF_init_pos,
-                                        targetPosition,
+        translation_steps = np.linspace(p_ST_init_S,
+                                        p_ST_S,
                                         num=interpolationSteps)
         # if end-effector goal orientation is also provided then perform
         # spherical linear interpolation
-        if orientation is not None:
-            start_ori = npRotation.from_matrix(EF_init_ori)
-            orientation_steps = slerp(np.linspace(0, 1, interpolationSteps),
-                                      [start_ori, orientation])
+        if targetOrientation is not None:
+            tar_ori = npRotation.from_matrix(R_ST)
+            start_ori = npRotation.from_matrix(R_ST_init)
+            rotations = npRotation.concatenate([start_ori, tar_ori])
+            orientation_interp = slerp([0, interpolationSteps-1],
+                                      rotations)
+            orientation_steps = orientation_interp((np.arange(interpolationSteps))).as_euler('xyz')
 
 
         # iterate through the interpolated end effector positions and perform
@@ -418,19 +537,20 @@ class Simulation(Simulation_base):
         for i in range(interpolationSteps):
             # get translation and orientation goals
             translation_goal = translation_steps[i, :]
-            if orientation is not None:
+            if targetOrientation is not None:
                 orientation_goal = orientation_steps[i, :]
 
             # estimate the differential in configuration of the joints in the
             # robot
-            if orientation is not None:
+            if targetOrientation is not None:
                 dq = self.inverseKinematics(endEffector,
                                                translation_goal,
                                                orientation_goal,
                                                interpolationSteps,
                                                maxIterPerStep=maxIter,
                                                threshold=threshold,
-                                               orientation_jacobian=True)
+                                            sourceFrame=sourceFrame,
+                                               oriJacob=True)
             else:
                 dq = self.inverseKinematics(endEffector,
                                                translation_goal,
@@ -438,7 +558,8 @@ class Simulation(Simulation_base):
                                                interpolationSteps=interpolationSteps,
                                                maxIterPerStep=maxIter,
                                                threshold=threshold,
-                                               orientation_jacobian=False)
+                                            sourceFrame=sourceFrame,
+                                               oriJacob=False)
 
 
             # update the joint states 
@@ -457,7 +578,7 @@ class Simulation(Simulation_base):
 
             # log for graphing and debug
             dist_to_target_position = np.linalg.norm(
-                targetPosition - self.getJointPosition(endEffector))
+                targetPosition - self.getJointPosition(endEffector, sourceFrame='world'))
             pltDistance.append(dist_to_target_position)
 
             if (dist_to_target_position < threshold):
@@ -594,78 +715,174 @@ class Simulation(Simulation_base):
         targetPosition,
         interpolationSteps,
         control_freq,
+        sourceFrame='world',
         speed=0.01,
-        orientation=None,
+        targetOrientation=None,
         threshold=1e-3,
         maxIter=3000,
         debug=False,
         verbose=False):
+        """Move the given end-effector with PD control
+
+        Move joints using inverse kinematics solver and using PD control. This
+        method should update joint states using the torque output from the PD
+        controller.
+
+        @param endEffector: Name of the joint that needs to be moved,
+        @type endEffector: str,
+        @param targetPosition: target position of the end effector,
+        @type targetPosition: np.ndarray(float),
+        @param interpolationSteps: num of interpolation steps for IK,
+        @type interpolationSteps: int,
+        @param control_freq: frequency of the control loop, also used for cubic
+        interpolation,
+        @type control_freq: int,
+        @param sourceFrame: base frame of the end effector. The Jacobian needs
+        to be estimated w.r.t this frame
+        @type sourceFrame: str
+        @param speed: ---
+        @type speed: float
+        @param orientation: target orientation of the end effector, if none
+        then orientation is not controlled. Assume a quaternion
+        @type orientation: np.ndarray(float)
+        @param threshold: threshold for distance between given target
+        position/orientation and the IK - used to check for IK convergence
+        @type threshold: float
+        @param maxIter: maximum number of IK iterations
+        @type maxIter: int
+
+
+        @returns pltTime, pltDistance: returns time series distance between end
+        effector and target position
+        @rtype x, y: np.ndarray(), np.ndarray
         """
-        Move joints using inverse kinematics solver and using PD control.
-        This method should update joint states using the torque output
-        from the PD controller.
-        Return:
-            pltTime, pltDistance arrays used for plotting
-        """
-        #TODO add your code here
-        # Iterate through joints and use states from IK solver as reference states in PD controller.
-        # Perform iterations to track reference states using PD controller until reaching
-        # max iterations or position threshold.
+        # TEST: test by moving arm to known place
+        # PASS: works when you fix the control set points
 
-        # Hint: here you can add extra steps if you want to allow your PD
-        # controller to converge to the final target position after performing
-        # all IK iterations (optional).
+        # TEST: add kinematic chain prescription
+        # PASS:
 
-        #return pltTime, pltDistance
+        # TEST: cubic interpolation
+        # FAIL: wobbling at every trajectory interpolation step 
+        # TEST: control for a specific eef orientation
+        # FAIL: Very erratic joint space behaviour
 
-        # iterate through joints and update joint states based on IK solver
+        # TODO: change position and orientation variables to reflect tedrake
+        # notation
+        # DONE:
+
+        # TODO: raise exception/warning when inverse kinematics cannot reach
+        # the target position
+
+        # TODO: figure out what default representation the code base uses and
+        # then navigate that
+
+        # NOTE: interpolates and executes control between initial and target 
+        # position/orientation. Only works on the kinematic chain responsible
+        # for the current end effector. Does this by updating a global variable
+        # `self.target_robot_configuration` after `inverseKinematics`. The tick
+        # function then reads this configuration and estimates torque from the
+        # tuned PID controller. It iterates through the joints only within the
+        # current kinematic chain and sets the motor torques.
+
+        # QUE: Am i sure that I have transformed all the positions and
+        # orientations w.r.t the source frame
+        # ANS: initial position and orientations - yes, target position
+        # FIX: target orientations 
+
+        # QUE: what does `getJointOrientation` return? what is stored in the
+        # jointAxis dictionary? what representations should I be using?
+
+
+
+        # intialise for graphing
         pltTime = []
         pltDistance = []
 
-        # which kinematic chain does it belong to
-        kinematic_chain = self.get_kinematic_chain(endEffector)
+        # which kinematic chain does the end effector belong to
+        kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
 
         # intialise the end effector position
-        EF_init_pos = self.getJointPosition(endEffector)
-        EF_init_ori = self.getJointOrientation(endEffector)
+        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(endEffector,
+                                                                     sourceFrame)
 
+        # NOTE: the target position and orientations are given in the
+        # world frame `W`. In order for the jacobian to be applied on the right
+        # `dy` the target position and orientation needs to be transformed to
+        # the source frame. Change the target's source frame
+        if sourceFrame == 'world':
+            p_ST_S = targetPosition
+            if targetOrientation is not None:
+                R_ST = npRotation.from_quat(targetOrientation).as_matrix()
+        else:
+            # estimate transformation between `S` and `W`
+            # TODO: need to change the reference frame of the target
+            # orientation as well
+            # DONE:
+            X_WS = self.getTransformationMatrix(sourceFrame, 'world')
+            X_SW = np.linalg.inv(X_WS)
+            if targetOrientation is not None:
+                R_SW = X_SW[:3, :3] # DOUBT: is this a proper rotation?
+                R_WT = npRotation.from_quat(targetOrientation).as_matrix()
+                R_ST = R_SW @ R_WT # rotation between source and target
+            p_ST_S = X_SW @ np.hstack((targetPosition, [1]))
+            p_ST_S = p_ST_S[:3]
 
+        # p_TS_S = EF_init_pos
+        # p_TS_S += [0.2, 0.0, 0.0]
         # Linear interpolation in the end-effector space
-        translation_steps = np.linspace(EF_init_pos,
-                                        targetPosition,
+        translation_steps = np.linspace(p_ST_init_S,
+                                        p_ST_S,
                                         num=interpolationSteps)
+        # translation_steps = np.linspace(EF_init_pos,
+        #                                 p_TS_S,
+        #                                 num=interpolationSteps)
         # if end-effector goal orientation is also provided then perform
         # spherical linear interpolation
-        if orientation is not None:
-            start_ori = npRotation.from_matrix(EF_init_ori)
-            orientation_steps = slerp(np.linspace(0, 1, interpolationSteps),
-                                      [start_ori, orientation])
+        # TODO: change orientations to a scipy.Rotations object
+        # FIX: fix the orientation slerp
+        if targetOrientation is not None:
+            tar_ori = npRotation.from_matrix(R_ST)
+            start_ori = npRotation.from_matrix(R_ST_init)
+            rotations = npRotation.concatenate([start_ori, tar_ori])
+            orientation_interp = slerp([0, interpolationSteps-1],
+                                      rotations)
+            orientation_steps = orientation_interp((np.arange(interpolationSteps))).as_euler('xyz')
+
 
 
         # some interpolation loop initialisations
         self.target_robot_configuration = {}
         # initalise previous configuration
-        for joint in kinematic_chain:
+        for joint in self.joints:
             self.previous_robot_configuration[joint] = self.getJointPos(joint)
+            self.rest_robot_configuration[joint] = self.getJointPos(joint)
 
         # iterate through the interpolated end effector positions and perform
         # IK on each interpolated point
         for i in range(interpolationSteps):
             # get translation and orientation goals
             translation_goal = translation_steps[i, :]
-            if orientation is not None:
+            if targetOrientation is not None:
                 orientation_goal = orientation_steps[i, :]
+
+            # TODO: break after threshold reached, check for threshiold reached
+
+
+            # TODO: break after maxIter reached
+
 
             # estimate the differential in configuration of the joints in the
             # robot
-            if orientation is not None:
+            if targetOrientation is not None:
                 dq = self.inverseKinematics(endEffector,
                                                translation_goal,
                                                orientation_goal,
                                                interpolationSteps,
                                                maxIterPerStep=maxIter,
                                                threshold=threshold,
-                                               orientation_jacobian=True)
+                                            sourceFrame=sourceFrame,
+                                               oriJacob=True)
             else:
                 dq = self.inverseKinematics(endEffector,
                                                translation_goal,
@@ -673,45 +890,106 @@ class Simulation(Simulation_base):
                                                interpolationSteps=interpolationSteps,
                                                maxIterPerStep=maxIter,
                                                threshold=threshold,
-                                               orientation_jacobian=False)
+                                            sourceFrame=sourceFrame,
+                                               oriJacob=False)
 
 
-            # update the joint states 
-            joint_states = {}
-            for idx, joint in enumerate(kinematic_chain):
-                joint_states[joint] =  self.getJointPos(joint) + dq[idx]
 
-            updated_pose_values = np.array(list(joint_states.values()))
 
-            # store the updated joint states in a global variable
-            self.target_robot_configuration = {key: value for key, value in
-                                               zip(kinematic_chain,
-                                                   updated_pose_values)}
+            # DEBG: updation of joint states now happens inside the control
+            # loop
 
-            # the outer loop assumes a straight line trajectory and
-            # interpolates between initial position and target position. This
-            # inner loop executes the robot control loop between two immediate
-            # interpolated points.
-            # TODO: implement cubic interpolation between current joint
-            # configuration and control set point.
+            # # update the joint states 
+            # joint_states = {}
+
+            # # list to maintain change in configuration - mainly for control
+            # # interpolation
+            # delta_joint_state = []
+            # for idx, joint in enumerate(kinematic_chain):
+            #     joint_states[joint] =  self.getJointPos(joint) + dq[idx]
+            #     delta_joint_state.append(dq[idx])
+
+            # updated_pose_values = np.array(list(joint_states.values()))
+
+            # # store the updated joint states in a global variable
+            # self.target_robot_configuration = {key: value for key, value in
+            #                                    zip(kinematic_chain,
+            #                                        updated_pose_values)}
+
+            temp = np.zeros((1, len(dq)))
+            points = np.vstack((temp, dq))
+
+
+            # NOTE: The outer loop assumes a straight line trajectory and
+            # interpolates between initial position and target position. 
+            # This inner loop executes the robot control loop between 
+            # two immediate interpolated points. As one can imagine, each outer
+            # loop interpolated end effector position gives you a discrete
+            # configuration that the PD control loop controls for. The target
+            # configuration `self.target_robot_configuration` in the tick 
+            # function becomes a step function. 
+
+            # NOTE: To smoothen the target configuration provided to the PD
+            # controller, the next step is to employ a cubic spline and fit the
+            # two consecutive target configuration control set points.
+
+
+            # TEST: cubic interpolation implmentation
+
+            # cubic interpolation between control set-points
+            _, set_points = self.cubic_interpolation(points,
+                                                     control_freq)
+            # DEBG: changing control set points to repeat instead of cubic
+            # interpolation
+            # set_points = np.repeat(np.expand_dims(dq, axis=1),
+            #                        control_freq, axis=1).transpose()
+
+
+            # initialise the integral error
             self.integral = 0.0
-            for step in range(control_freq):
-                # move the joints in the simulation
+
+            # local variable to hold the current configuration
+            current_robot_configuration = {}
+            for joint in kinematic_chain:
+                current_robot_configuration[joint] = self.getJointPos(joint)
+
+
+            # iterate through control points
+            for point in set_points:
+
+                # iterate through the kinematic chain and update the control
+                # setpoint
+                joint_states = {}
+
+                for idx, joint in enumerate(kinematic_chain):
+                    joint_states[joint] =  current_robot_configuration[joint] + point[idx]
+
+                # organise the updated values
+                updated_pose_values = np.array(list(joint_states.values()))
+
+                # store the updated control set points in a global variable
+                self.target_robot_configuration = {key: value for key, value in
+                                                   zip(kinematic_chain,
+                                                       updated_pose_values)}
+
                 self.tick()
 
+                # check threshold
 
 
-            # log for graphing and debug
-            dist_to_target_position = np.linalg.norm(
-                targetPosition - self.getJointPosition(endEffector))
-            pltDistance.append(dist_to_target_position)
 
-            if (dist_to_target_position < threshold):
-                pltTime = np.linspace(0,
-                                      self.dt*len(pltDistance),
-                                      len(pltDistance))
+                # log for graphing and debug
+                dist_to_target_position = np.linalg.norm(
+                    targetPosition - self.getJointPosition(endEffector,
+                                                           sourceFrame='world'))
+                pltDistance.append(dist_to_target_position)
 
-                return pltTime, pltDistance
+                if (dist_to_target_position < threshold):
+                    pltTime = np.linspace(0,
+                                          self.dt*len(pltDistance),
+                                          len(pltDistance))
+
+                    return pltTime, pltDistance
 
         pltTime = np.linspace(0,
                               self.dt*len(pltDistance),
@@ -719,7 +997,6 @@ class Simulation(Simulation_base):
 
         return pltTime, pltDistance
         # raise Exception("Failed to reach target pose")
-
 
     def tick(self):
         """Ticks one step of simulation using PD control."""
@@ -740,8 +1017,15 @@ class Simulation(Simulation_base):
 
             ### Implement your code from here ... ###
 
-            # get target position
-            targetPosition = self.target_robot_configuration[joint]
+            # get target position, if the joint belongs to an inactive
+            # kinematic chain, then take rest configuration of the joint and
+            # set that as the control set point
+            if joint in self.target_robot_configuration.keys():
+                targetPosition = self.target_robot_configuration[joint]
+            elif joint in self.rest_robot_configuration.keys():
+                targetPosition = self.rest_robot_configuration[joint]
+            else:
+                continue
             # get current position
             q_joint = self.getJointPos(joint)
             # get target velocity
@@ -764,6 +1048,7 @@ class Simulation(Simulation_base):
                 kd=kd)
 
             # update the previous robot configuration
+            # HACK: is this where this needs to be updated?
             self.previous_robot_configuration[joint] = q_joint
             ### ... to here ###
 
@@ -793,18 +1078,41 @@ class Simulation(Simulation_base):
 
     ########## Task 3: Robot Manipulation ##########
     def cubic_interpolation(self, points, nTimes=100):
-        """
-        Given a set of control points, return the
-        cubic spline defined by the control points,
-        sampled nTimes along the curve.
-        """
-        #TODO add your code here
-        # Return 'nTimes' points per dimension in 'points' (typically a 2xN array),
-        # sampled from a cubic spline defined by 'points' and a boundary condition.
-        # You may use methods found in scipy.interpolate
+        """Cubic interpolation of Control Points
 
-        #return xpoints, ypoints
-        pass
+        Given a set of control `points` - typically there will be two points
+        for every joint in the configuration that we are trying to control, the
+        starting configuration and the ending configuration for a particular
+        interpolation time step - return a list of `nTimes` `points` sampled
+        along a cubic spline, fitted to the control points.
+
+
+        @param points: control points that needs to be interpolated - shape (2,
+        N) where N is the number of joints in the kinematic chain
+        @type points: np.ndarray
+        @param nTimes: The number of points that need to be returned along the
+        cubic spline
+        @type nTimes: int
+        @returns x, y: 2 lists of sampled points from the cubic spline
+        @rtype: np.array, np.array
+        """
+
+        # TEST: needs to be tested
+
+        boundary = 'natural'
+
+        x_temp = np.array([0, nTimes])
+
+        # build interpolation
+        spline = CubicSpline(x_temp, points, bc_type=boundary)
+
+        # sample interpolation
+        x = np.arange(nTimes)
+
+        y = spline(x)
+
+        return x, y
+
 
     # Task 3.1 Pushing
     def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,

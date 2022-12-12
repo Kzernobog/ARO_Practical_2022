@@ -1,1 +1,4 @@
 *.pyc
+core/__pycache__
+core.egg-info
+dist

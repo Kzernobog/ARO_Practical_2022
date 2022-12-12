@@ -10,7 +10,6 @@ import yaml
 
 from Pybullet_Simulation_base import Simulation_base
 
-# TODO: Rename class name after copying this file
 class Simulation_template(Simulation_base):
     """A Bullet simulation involving Nextage robot"""
 
@@ -30,7 +29,6 @@ class Simulation_template(Simulation_base):
     jointRotationAxis = {
         'base_to_dummy': np.zeros(3),  # Virtual joint
         'base_to_waist': np.zeros(3),  # Fixed joint
-        # TODO: modify from here
         'CHEST_JOINT0': np.array([0, 0, 0]),
         'HEAD_JOINT0': np.array([0, 0, 0]),
         'HEAD_JOINT1': np.array([0, 0, 0]),
@@ -53,7 +51,6 @@ class Simulation_template(Simulation_base):
     frameTranslationFromParent = {
         'base_to_dummy': np.zeros(3),  # Virtual joint
         'base_to_waist': np.zeros(3),  # Fixed joint
-        # TODO: modify from here
         'CHEST_JOINT0': np.array([0, 0, 0]),
         'HEAD_JOINT0': np.array([0, 0, 0]),
         'HEAD_JOINT1': np.array([0, 0, 0]),
