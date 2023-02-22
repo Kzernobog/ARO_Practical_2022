@@ -27,13 +27,15 @@ from Pybullet_Simulation_base import Simulation_base
 # that every time i call `getJointLocationAndOrientation` i am computing the
 # transformation matrices of all joints in the kinematic chain.
 
+
 class Simulation(Simulation_base):
     """A Bullet simulation involving Nextage robot"""
 
     def __init__(self, pybulletConfigs, robotConfigs, refVect=None):
         """Constructor
         Creates a simulation instance with Nextage robot.
-        For the keyword arguments, please see in the Pybullet_Simulation_base.py
+        For the keyword arguments, please see in the 
+        Pybullet_Simulation_base.py
         """
         super().__init__(pybulletConfigs, robotConfigs)
         if refVect:
