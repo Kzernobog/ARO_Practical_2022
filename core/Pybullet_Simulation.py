@@ -495,8 +495,9 @@ class Simulation(Simulation_base):
         kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
 
         # intialise the end effector position
-        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(endEffector,
-                                                                     sourceFrame)
+        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(
+                endEffector,
+                sourceFrame)
 
         # NOTE: the target position and orientations are given in the
         # world frame `W`. In order for the jacobian to be applied on the right
@@ -647,11 +648,11 @@ class Simulation(Simulation_base):
             ki = self.ctrlConfig[jointController]['pid']['i']
             kd = self.ctrlConfig[jointController]['pid']['d']
 
-            ### Start your code here: ###
+            # Start your code here: #
             # Calculate the torque with the above method you've made
             torque = self.calculateTorque(x_ref, x_real, dx_ref, dx_real,
                                           integral, kp, ki, kd)
-            ### To here ###
+            # To here #
 
             pltTorque.append(torque)
 
@@ -675,7 +676,9 @@ class Simulation(Simulation_base):
             [], [], [], [], [], [])
 
         integral = 0
-        q_old = 0 # this to compute instantaneous velocity using backward eulers
+
+        # this to compute instantaneous velocity using backward eulers
+        q_old = 0
 
         for c in range(1000):
             # obtain current position
@@ -779,7 +782,7 @@ class Simulation(Simulation_base):
         # TODO: figure out what default representation the code base uses and
         # then navigate that
 
-        # NOTE: interpolates and executes control between initial and target 
+        # NOTE: interpolates and executes control between initial and target
         # position/orientation. Only works on the kinematic chain responsible
         # for the current end effector. Does this by updating a global variable
         # `self.target_robot_configuration` after `inverseKinematics`. The tick
@@ -795,8 +798,6 @@ class Simulation(Simulation_base):
         # QUE: what does `getJointOrientation` return? what is stored in the
         # jointAxis dictionary? what representations should I be using?
 
-
-
         # intialise for graphing
         pltTime = []
         pltDistance = []
@@ -805,8 +806,9 @@ class Simulation(Simulation_base):
         kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
 
         # intialise the end effector position
-        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(endEffector,
-                                                                     sourceFrame)
+        p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(
+                endEffector,
+                sourceFrame)
 
         # NOTE: the target position and orientations are given in the
         # world frame `W`. In order for the jacobian to be applied on the right
@@ -824,21 +826,17 @@ class Simulation(Simulation_base):
             X_WS = self.getTransformationMatrix(sourceFrame, 'world')
             X_SW = np.linalg.inv(X_WS)
             if targetOrientation is not None:
-                R_SW = X_SW[:3, :3] # DOUBT: is this a proper rotation?
+                R_SW = X_SW[:3, :3]  # DOUBT: is this a proper rotation?
                 R_WT = npRotation.from_quat(targetOrientation).as_matrix()
-                R_ST = R_SW @ R_WT # rotation between source and target
+                R_ST = R_SW @ R_WT  # rotation between source and target
             p_ST_S = X_SW @ np.hstack((targetPosition, [1]))
             p_ST_S = p_ST_S[:3]
 
-        # p_TS_S = EF_init_pos
-        # p_TS_S += [0.2, 0.0, 0.0]
         # Linear interpolation in the end-effector space
         translation_steps = np.linspace(p_ST_init_S,
                                         p_ST_S,
                                         num=interpolationSteps)
-        # translation_steps = np.linspace(EF_init_pos,
-        #                                 p_TS_S,
-        #                                 num=interpolationSteps)
+
         # if end-effector goal orientation is also provided then perform
         # spherical linear interpolation
         # TODO: change orientations to a scipy.Rotations object
@@ -847,11 +845,11 @@ class Simulation(Simulation_base):
             tar_ori = npRotation.from_matrix(R_ST)
             start_ori = npRotation.from_matrix(R_ST_init)
             rotations = npRotation.concatenate([start_ori, tar_ori])
-            orientation_interp = slerp([0, interpolationSteps-1],
-                                      rotations)
-            orientation_steps = orientation_interp((np.arange(interpolationSteps))).as_euler('xyz')
-
-
+            orientation_interp = slerp(
+                    [0, interpolationSteps-1],
+                    rotations)
+            orientation_steps = orientation_interp(
+                    (np.arange(interpolationSteps))).as_euler('xyz')
 
         # some interpolation loop initialisations
         self.target_robot_configuration = {}
@@ -869,72 +867,49 @@ class Simulation(Simulation_base):
                 orientation_goal = orientation_steps[i, :]
 
             # TODO: break after threshold reached, check for threshiold reached
-
+            if np.linalg.norm(translation_goal - p_ST_S) < threshold:
+                break
 
             # TODO: break after maxIter reached
-
 
             # estimate the differential in configuration of the joints in the
             # robot
             if targetOrientation is not None:
-                dq = self.inverseKinematics(endEffector,
-                                               translation_goal,
-                                               orientation_goal,
-                                               interpolationSteps,
-                                               maxIterPerStep=maxIter,
-                                               threshold=threshold,
-                                            sourceFrame=sourceFrame,
-                                               oriJacob=True)
+                dq = self.inverseKinematics(
+                        endEffector,
+                        translation_goal,
+                        orientation_goal,
+                        interpolationSteps,
+                        maxIterPerStep=maxIter,
+                        threshold=threshold,
+                        sourceFrame=sourceFrame,
+                        oriJacob=True)
             else:
-                dq = self.inverseKinematics(endEffector,
-                                               translation_goal,
-                                               targetOrientation=None,
-                                               interpolationSteps=interpolationSteps,
-                                               maxIterPerStep=maxIter,
-                                               threshold=threshold,
-                                            sourceFrame=sourceFrame,
-                                               oriJacob=False)
-
-
-
-
-            # DEBG: updation of joint states now happens inside the control
-            # loop
-
-            # # update the joint states 
-            # joint_states = {}
-
-            # # list to maintain change in configuration - mainly for control
-            # # interpolation
-            # delta_joint_state = []
-            # for idx, joint in enumerate(kinematic_chain):
-            #     joint_states[joint] =  self.getJointPos(joint) + dq[idx]
-            #     delta_joint_state.append(dq[idx])
-
-            # updated_pose_values = np.array(list(joint_states.values()))
-
-            # # store the updated joint states in a global variable
-            # self.target_robot_configuration = {key: value for key, value in
-            #                                    zip(kinematic_chain,
-            #                                        updated_pose_values)}
+                dq = self.inverseKinematics(
+                        endEffector,
+                        translation_goal,
+                        targetOrientation=None,
+                        interpolationSteps=interpolationSteps,
+                        maxIterPerStep=maxIter,
+                        threshold=threshold,
+                        sourceFrame=sourceFrame,
+                        oriJacob=False)
 
             temp = np.zeros((1, len(dq)))
             points = np.vstack((temp, dq))
 
-
             # NOTE: The outer loop assumes a straight line trajectory and
-            # interpolates between initial position and target position. 
-            # This inner loop executes the robot control loop between 
+            # interpolates between initial position and target position.
+            # This inner loop executes the robot control loop between
             # two immediate interpolated points. As one can imagine, each outer
             # loop interpolated end effector position gives you a discrete
             # configuration that the PD control loop controls for. The target
-            # configuration `self.target_robot_configuration` in the tick 
-            # function becomes a step function. 
+            # configuration `self.target_robot_configuration` in the tick
+            # function becomes a step function.
 
             # NOTE: To smoothen the target configuration provided to the PD
             # controller, the next step is to employ a cubic spline and fit the
             # two consecutive target configuration control set points.
-
 
             # TEST: cubic interpolation implmentation
 
@@ -946,7 +921,6 @@ class Simulation(Simulation_base):
             # set_points = np.repeat(np.expand_dims(dq, axis=1),
             #                        control_freq, axis=1).transpose()
 
-
             # initialise the integral error
             self.integral = 0.0
 
@@ -954,7 +928,6 @@ class Simulation(Simulation_base):
             current_robot_configuration = {}
             for joint in kinematic_chain:
                 current_robot_configuration[joint] = self.getJointPos(joint)
-
 
             # iterate through control points
             for point in set_points:
@@ -964,7 +937,7 @@ class Simulation(Simulation_base):
                 joint_states = {}
 
                 for idx, joint in enumerate(kinematic_chain):
-                    joint_states[joint] =  current_robot_configuration[joint] + point[idx]
+                    joint_states[joint] = current_robot_configuration[joint] + point[idx]
 
                 # organise the updated values
                 updated_pose_values = np.array(list(joint_states.values()))

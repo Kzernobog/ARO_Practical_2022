@@ -51,8 +51,6 @@ robotConfigs = {
 verbose = False
 debugLine = True
 
-
-
 ref = [0, 0, 1]
 sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
 
@@ -61,9 +59,10 @@ sim = Simulation(pybulletConfigs, robotConfigs, refVect=ref)
 # frame is located at the waist, you will need to transform this vector using
 # the base_to_waist translation.
 endEffector = "LARM_JOINT5"
-# targetPosition = np.array([0.37, 0.23, 1.06385])  # x,y,z coordinates in world frame
-temp = sim.getJointPosition(endEffector, sourceFrame='world') + np.array([0.0,
-                                                                         0.1, 0.2])
+# targetPosition = np.array(
+#         [0.37, 0.23, 1.06385])  # x,y,z coordinates in world frame
+temp = sim.getJointPosition(endEffector, sourceFrame='world') + np.array(
+        [0.0, 0.1, 0.2])
 targetPosition = temp
 targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
 # targetOrientation = sim.getJointOrientation(endEffector, sourceFrame='world')
@@ -72,25 +71,27 @@ targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
 baseframe = 'CHEST_JOINT0'
 
 # Example code. Feel free to modify
-pltTime, pltEFPosition = sim.move_without_PD(endEffector,
-                                             targetPosition,
-                                             interpolationSteps=100,
-                                             speed=0.01,
-                                             targetOrientation=targetOrientation,
-                                             sourceFrame=baseframe,
-                                             threshold=1e-3,
-                                             maxIter=3000,
-                                             debug=False,
-                                             verbose=False)
+# pltTime, pltEFPosition = sim.move_without_PD(
+#         endEffector,
+#         targetPosition,
+#         interpolationSteps=100,
+#         speed=0.01,
+#         targetOrientation=targetOrientation,
+#         sourceFrame=baseframe,
+#         threshold=1e23,
+#         maxIter=3000,
+#         debug=False,
+#         verbose=False)
 
-# pltTime, pltEFPosition = sim.move_without_PD(endEffector,
-#                                                  targetPosition,
-#                                                  interpolationSteps=50,
-#                                                  speed=0.01,
-#                                                  threshold=1e-3,
-#                                                  maxIter=3000,
-#                                                  debug=False,
-#                                                  verbose=False)
+pltTime, pltEFPosition = sim.move_without_PD(
+        endEffector,
+        targetPosition,
+        interpolationSteps=50,
+        speed=0.01,
+        threshold=1e-3,
+        maxIter=3000,
+        debug=False,
+        verbose=False)
 
 
 # Now plot some graphs

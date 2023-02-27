@@ -1,4 +1,9 @@
-import subprocess, math, time, sys, os, numpy as np
+import subprocess
+import math
+import time
+import sys
+import os
+import numpy as np
 import matplotlib.pyplot as plt
 import pybullet as bullet_simulation
 import pybullet_data
@@ -47,7 +52,7 @@ robotConfigs = {
 
 sim = Simulation(pybulletConfigs, robotConfigs)
 
-##### Please leave this function unchanged, feel free to modify others #####
+
 def getReadyForTask():
     global finalTargetPos
     # compile urdfs
@@ -61,11 +66,11 @@ def getReadyForTask():
     sim.p.resetJointState(bodyUniqueId=1, jointIndex=6, targetValue=-0.4)
     # load the table in front of the robot
     tableId = sim.p.loadURDF(
-        fileName            = abs_path+"/lib/task_urdfs/table/table_taller.urdf",
-        basePosition        = [0.8, 0, 0],
-        baseOrientation     = sim.p.getQuaternionFromEuler([0, 0, math.pi/2]),
-        useFixedBase        = True,
-        globalScaling       = 1.4
+        fileName=abs_path+"/lib/task_urdfs/table/table_taller.urdf",
+        basePosition=[0.8, 0, 0],
+        baseOrientation=sim.p.getQuaternionFromEuler([0, 0, math.pi/2]),
+        useFixedBase=True,
+        globalScaling=1.4
     )
     cubeId = sim.p.loadURDF(
         fileName            = abs_path+"/lib/task_urdfs/cubes/cube_small.urdf",
@@ -93,7 +98,7 @@ def getReadyForTask():
 def solution():
     # TODO: Move the LHAND5 .
     # STATUS: `move_without_PD` seems to be moving the end-effector.
-    # `move_with_PD` behavews erratically.
+    # `move_with_PD` behaves erratically.
 
     # targetPosition = [0.33, 0, 1.20]
     endEffector = "LARM_JOINT5"
@@ -102,25 +107,27 @@ def solution():
     targetPosition = temp
     # targetPosition = finalTargetPos
     targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
-    # targetOrientation = sim.p.getQuaternionFromEuler(sim.getJointOrientation(endEffector, sourceFrame='world'))
+    # targetOrientation = sim.p.getQuaternionFromEuler(
+    #         sim.getJointOrientation(
+    #             endEffector,
+    #             sourceFrame='world'))
     # baseFrame = 'world'
     baseFrame = 'CHEST_JOINT0'
-    interpSteps = 100
+    interpSteps = 10
     controlFrequency = 1000
-    sim.move_with_PD(endEffector,
-                     targetPosition,
-                     interpSteps,
-                     controlFrequency,
-                     baseFrame,
-                     targetOrientation=targetOrientation
-                    )
     # sim.move_with_PD(endEffector,
     #                  targetPosition,
     #                  interpSteps,
     #                  controlFrequency,
-    #                  baseFrame
-    #                 )
-    pass
+    #                  baseFrame,
+    #                  targetOrientation=targetOrientation)
+    sim.move_with_PD(endEffector,
+                     targetPosition,
+                     interpSteps,
+                     controlFrequency,
+                     baseFrame)
+    return
+
 
 tableId, cubeId, targetId = getReadyForTask()
 solution()
