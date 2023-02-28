@@ -1,14 +1,16 @@
 from scipy.spatial.transform import Rotation as npRotation
 from scipy.spatial.transform import Slerp as slerp
-from scipy.special import comb
+# from scipy.special import comb
 from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
-import math
-import re
+# import math
+# import re
 import time
-import yaml
+# import yaml
 import sys
+import pudb
+from pudb import set_trace
 
 from Pybullet_Simulation_base import Simulation_base
 # FIX: controlling for orientation is absolutely shit! needs to be debugged
@@ -117,9 +119,8 @@ class Simulation(Simulation_base):
                           8,  'LARM_JOINT4': 9,
                           'LARM_JOINT5': 10}
 
-
-    ########## Task 1: Kinematics ##########
     # Task 1.1 Forward Kinematics
+
     def get_kinematic_chain(
         self,
         jointName,
@@ -147,13 +148,21 @@ class Simulation(Simulation_base):
 
         for chain in self.robotLimbs:
             if jointName in chain:
-                kinematic_chain = kinematic_chain + chain[:chain.index(jointName)+1]
+                kinematic_chain = kinematic_chain + chain[
+                        :chain.index(jointName)+1]
                 break
 
         if sourceFrame != "world":
             kinematic_chain = kinematic_chain[
-                kinematic_chain.index(sourceFrame)+1: ]
+                kinematic_chain.index(sourceFrame)+1:]
 
+        # DEBG:  print the kinematic chain
+        print("kinematic chain, source frame, jointName: {}, {}, {}".format(
+            kinematic_chain,
+            sourceFrame,
+            jointName))
+        # BP:
+        breakpoint()
         return kinematic_chain
 
     def getJointRotationalMatrix(self, jointName=None, theta=None):
@@ -256,7 +265,7 @@ class Simulation(Simulation_base):
         kinematic_chain = self.get_kinematic_chain(jointName, sourceFrame)
 
         # check which kinematic tree the given joint exists in, accordingly
-        # descend down that tree computing transformation 
+        # descend down that tree computing transformation
         for joint in kinematic_chain:
             transformation = transformation @ transformation_matrices[joint]
 
@@ -342,8 +351,10 @@ class Simulation(Simulation_base):
             @returns (np.ndarray)
 
         """
-        return np.array(self.getJointLocationAndOrientation(jointName,
-                                                            sourceFrame=sourceFrame)[1] @ self.jointRotationAxis[jointName]).squeeze()
+        return np.array(self.getJointLocationAndOrientation(
+            jointName,
+            sourceFrame=sourceFrame)[1] @
+                        self.jointRotationAxis[jointName]).squeeze()
 
     def jacobianMatrix(self,
                        endEffector,
@@ -370,21 +381,25 @@ class Simulation(Simulation_base):
         position_jacobian = []
         orientation_jacobian = []
 
-        kinematic_chain = self.get_kinematic_chain(endEffector,
-                                                   sourceFrame=sourceFrame)
+        kinematic_chain = self.get_kinematic_chain(
+                endEffector,
+                sourceFrame=sourceFrame)
 
-        p_eff = self.getJointPosition(endEffector,
-                                      sourceFrame=sourceFrame)
+        p_eff = self.getJointPosition(
+                endEffector,
+                sourceFrame=sourceFrame)
         # DEBG: use `getJointOrientation` instead
 
-        a_eff = self.getJointAxis(endEffector,
-                                  sourceFrame=sourceFrame)
+        a_eff = self.getJointAxis(
+                endEffector,
+                sourceFrame=sourceFrame)
         # a_eff = self.getJointOrientation(endEffector,
         #                                  sourceFrame=sourceFrame)
 
         for joint in kinematic_chain:
-            p_i = self.getJointPosition(joint,
-                                        sourceFrame=sourceFrame)
+            p_i = self.getJointPosition(
+                    joint,
+                    sourceFrame=sourceFrame)
             # a_i = self.getJointOrientation(joint,
             #                                sourceFrame=sourceFrame)
             a_i = self.getJointAxis(joint,
@@ -448,10 +463,12 @@ class Simulation(Simulation_base):
         J_pos, J_ori = self.jacobianMatrix(endEffector, sourceFrame=sourceFrame)
         if oriJacob:
             jacobian = np.vstack((J_pos, J_ori))
-            trans_delta = targetPosition - self.getJointPosition(endEffector,
-                                                                 sourceFrame=sourceFrame)
-            current_ori = self.getJointOrientation(endEffector,
-                                                   sourceFrame=sourceFrame)
+            trans_delta = targetPosition - self.getJointPosition(
+                    endEffector,
+                    sourceFrame=sourceFrame)
+            current_ori = self.getJointOrientation(
+                    endEffector,
+                    sourceFrame=sourceFrame)
             ori_delta = targetOrientation - current_ori
             dy = np.hstack((trans_delta, ori_delta))
         else:
@@ -611,8 +628,7 @@ class Simulation(Simulation_base):
         self.drawDebugLines()
         time.sleep(self.dt)
 
-    ########## Task 2: Dynamics ##########
-    # Task 2.1 PD Controller
+    # Task 2.1 Dynamics: PD Controller
     def calculateTorque(self, x_ref, x_real, dx_ref, dx_real, integral, kp, ki, kd):
         """ This method implements the closed-loop control \\
         Arguments: \\
@@ -720,7 +736,7 @@ class Simulation(Simulation_base):
         targetPosition,
         interpolationSteps,
         control_freq,
-        sourceFrame='world',
+        sourceFrame,
         speed=0.01,
         targetOrientation=None,
         threshold=1e-3,
@@ -803,7 +819,10 @@ class Simulation(Simulation_base):
         pltDistance = []
 
         # which kinematic chain does the end effector belong to
+        # DEBG: print sourceframe
+        print("source frame: {}".format(sourceFrame))
         kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
+        print("kinematic chain: {}".format(kinematic_chain))
 
         # intialise the end effector position
         p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(
@@ -950,9 +969,6 @@ class Simulation(Simulation_base):
                 self.tick()
 
                 # check threshold
-
-
-
                 # log for graphing and debug
                 dist_to_target_position = np.linalg.norm(
                     targetPosition - self.getJointPosition(endEffector,
@@ -960,9 +976,10 @@ class Simulation(Simulation_base):
                 pltDistance.append(dist_to_target_position)
 
                 if (dist_to_target_position < threshold):
-                    pltTime = np.linspace(0,
-                                          self.dt*len(pltDistance),
-                                          len(pltDistance))
+                    pltTime = np.linspace(
+                            0,
+                            self.dt*len(pltDistance),
+                            len(pltDistance))
 
                     return pltTime, pltDistance
 

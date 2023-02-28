@@ -125,7 +125,7 @@ def solution():
                      targetPosition,
                      interpSteps,
                      controlFrequency,
-                     baseFrame)
+                     sourceFrame=baseFrame)
     return
 
 
