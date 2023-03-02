@@ -71,27 +71,27 @@ targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
 baseframe = 'CHEST_JOINT0'
 
 # Example code. Feel free to modify
-# pltTime, pltEFPosition = sim.move_without_PD(
-#         endEffector,
-#         targetPosition,
-#         interpolationSteps=100,
-#         speed=0.01,
-#         targetOrientation=targetOrientation,
-#         sourceFrame=baseframe,
-#         threshold=1e23,
-#         maxIter=3000,
-#         debug=False,
-#         verbose=False)
-
 pltTime, pltEFPosition = sim.move_without_PD(
         endEffector,
         targetPosition,
-        interpolationSteps=50,
+        interpolationSteps=100,
         speed=0.01,
-        threshold=1e-3,
+        targetOrientation=targetOrientation,
+        sourceFrame=baseframe,
+        threshold=1e23,
         maxIter=3000,
         debug=False,
         verbose=False)
+
+# pltTime, pltEFPosition = sim.move_without_PD(
+#         endEffector,
+#         targetPosition,
+#         interpolationSteps=50,
+#         speed=0.01,
+#         threshold=1e-3,
+#         maxIter=3000,
+#         debug=False,
+#         verbose=False)
 
 
 # Now plot some graphs

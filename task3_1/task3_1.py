@@ -106,7 +106,8 @@ def solution():
                                                                          0.1, 0.2])
     targetPosition = temp
     # targetPosition = finalTargetPos
-    targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
+    targetOrientation = sim.p.getQuaternionFromEuler([math.pi/18, 0, 0])
+    # targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
     # targetOrientation = sim.p.getQuaternionFromEuler(
     #         sim.getJointOrientation(
     #             endEffector,
@@ -115,17 +116,17 @@ def solution():
     baseFrame = 'CHEST_JOINT0'
     interpSteps = 10
     controlFrequency = 1000
-    # sim.move_with_PD(endEffector,
-    #                  targetPosition,
-    #                  interpSteps,
-    #                  controlFrequency,
-    #                  baseFrame,
-    #                  targetOrientation=targetOrientation)
     sim.move_with_PD(endEffector,
                      targetPosition,
                      interpSteps,
                      controlFrequency,
-                     sourceFrame=baseFrame)
+                     baseFrame,
+                     targetOrientation=targetOrientation)
+    # sim.move_with_PD(endEffector,
+    #                  targetPosition,
+    #                  interpSteps,
+    #                  controlFrequency,
+    #                  sourceFrame=baseFrame)
     return
 
 

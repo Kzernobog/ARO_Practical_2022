@@ -156,13 +156,11 @@ class Simulation(Simulation_base):
             kinematic_chain = kinematic_chain[
                 kinematic_chain.index(sourceFrame)+1:]
 
-        # DEBG:  print the kinematic chain
-        print("kinematic chain, source frame, jointName: {}, {}, {}".format(
-            kinematic_chain,
-            sourceFrame,
-            jointName))
-        # BP:
-        breakpoint()
+        # DEL:  print the kinematic chain
+        # print("kinematic chain, source frame, jointName: {}, {}, {}".format(
+        #     kinematic_chain,
+        #     sourceFrame,
+        #     jointName))
         return kinematic_chain
 
     def getJointRotationalMatrix(self, jointName=None, theta=None):
@@ -466,9 +464,16 @@ class Simulation(Simulation_base):
             trans_delta = targetPosition - self.getJointPosition(
                     endEffector,
                     sourceFrame=sourceFrame)
-            current_ori = self.getJointOrientation(
-                    endEffector,
-                    sourceFrame=sourceFrame)
+            # DEBG: the following snippet uses the member function
+            # this member function does something with a refvector, no idea 
+            # what that is.
+            # current_ori = self.getJointOrientation(
+            #         endEffector,
+            #         sourceFrame=sourceFrame)
+            current_ori = npRotation.from_matrix(
+                    self.getJointLocationAndOrientation(
+                        endEffector,
+                        sourceFrame=sourceFrame)[1]).as_euler('xyz')
             ori_delta = targetOrientation - current_ori
             dy = np.hstack((trans_delta, ori_delta))
         else:
@@ -476,7 +481,7 @@ class Simulation(Simulation_base):
             dy = targetPosition - self.getJointPosition(endEffector,
                                                         sourceFrame=sourceFrame)
 
-        # DEBG: 
+        # DEBG: print dy shape and jacobian
         print("dy shape: {}".format(dy.shape))
         print("jacobian shape: {}".format(jacobian.shape))
         J_inv = np.linalg.pinv(jacobian)
@@ -819,12 +824,10 @@ class Simulation(Simulation_base):
         pltDistance = []
 
         # which kinematic chain does the end effector belong to
-        # DEBG: print sourceframe
-        print("source frame: {}".format(sourceFrame))
         kinematic_chain = self.get_kinematic_chain(endEffector, sourceFrame)
-        print("kinematic chain: {}".format(kinematic_chain))
 
         # intialise the end effector position
+        # FIX: choose better transformation frame names and refactor
         p_ST_init_S, R_ST_init = self.getJointLocationAndOrientation(
                 endEffector,
                 sourceFrame)
@@ -839,27 +842,34 @@ class Simulation(Simulation_base):
                 R_ST = npRotation.from_quat(targetOrientation).as_matrix()
         else:
             # estimate transformation between `S` and `W`
-            # TODO: need to change the reference frame of the target
-            # orientation as well
-            # DONE:
             X_WS = self.getTransformationMatrix(sourceFrame, 'world')
             X_SW = np.linalg.inv(X_WS)
+
+            # estimate rotation matrix between `S` and `T`
             if targetOrientation is not None:
-                R_SW = X_SW[:3, :3]  # DOUBT: is this a proper rotation?
+                R_SW = npRotation.from_matrix(X_SW[:3, :3]).as_matrix()
                 R_WT = npRotation.from_quat(targetOrientation).as_matrix()
                 R_ST = R_SW @ R_WT  # rotation between source and target
-            p_ST_S = X_SW @ np.hstack((targetPosition, [1]))
+
+            # estimate position vector from `S` to `T` in the `S` frame
+            # DOUBT: include shorthand in drake notation while naming
+            # variables?
+            p_WT_W = np.hstack((targetPosition, [1]))
+            p_ST_S = X_SW @ p_WT_W
             p_ST_S = p_ST_S[:3]
 
         # Linear interpolation in the end-effector space
-        translation_steps = np.linspace(p_ST_init_S,
-                                        p_ST_S,
-                                        num=interpolationSteps)
+        translation_steps = np.linspace(
+                p_ST_init_S,
+                p_ST_S,
+                num=interpolationSteps)
 
-        # if end-effector goal orientation is also provided then perform
-        # spherical linear interpolation
+        # spherical linear interpolation in end-effector space
         # TODO: change orientations to a scipy.Rotations object
         # FIX: fix the orientation slerp
+        # DOUBT: are the angles in radians or degrees?
+        # ANS: angles from outide the class are in radians
+        # DOUBT: check if order of euler angles is actually 'xyz'
         if targetOrientation is not None:
             tar_ori = npRotation.from_matrix(R_ST)
             start_ori = npRotation.from_matrix(R_ST_init)
@@ -1068,7 +1078,8 @@ class Simulation(Simulation_base):
         self.drawDebugLines()
         time.sleep(self.dt)
 
-    ########## Task 3: Robot Manipulation ##########
+    # Manipulation
+
     def cubic_interpolation(self, points, nTimes=100):
         """Cubic interpolation of Control Points
 
@@ -1104,7 +1115,6 @@ class Simulation(Simulation_base):
         y = spline(x)
 
         return x, y
-
 
     # Task 3.1 Pushing
     def dockingToPosition(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005,
