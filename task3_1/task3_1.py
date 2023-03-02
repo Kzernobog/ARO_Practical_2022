@@ -101,7 +101,7 @@ def solution():
     # `move_with_PD` behaves erratically.
 
     # targetPosition = [0.33, 0, 1.20]
-    endEffector = "LARM_JOINT5"
+    endEffector = "RARM_JOINT5"
     temp = sim.getJointPosition(endEffector, sourceFrame='world') + np.array([0.0,
                                                                          0.1, 0.2])
     targetPosition = temp

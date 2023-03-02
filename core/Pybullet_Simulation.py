@@ -13,13 +13,6 @@ import pudb
 from pudb import set_trace
 
 from Pybullet_Simulation_base import Simulation_base
-# FIX: controlling for orientation is absolutely shit! needs to be debugged
-# TEST: is `move_without_PD` working with orientation control
-# FAIL: getting wierd configurations
-# TEST: tested with better target positions and target orientations
-# PASS:
-# TEST: `move_with_PD` still misbehaving
-# FAIL:
 
 # FIX: get_kinematic_chain is being called too many times, maybe make it a
 # class variable
@@ -481,11 +474,7 @@ class Simulation(Simulation_base):
             dy = targetPosition - self.getJointPosition(endEffector,
                                                         sourceFrame=sourceFrame)
 
-        # DEBG: print dy shape and jacobian
-        print("dy shape: {}".format(dy.shape))
-        print("jacobian shape: {}".format(jacobian.shape))
         J_inv = np.linalg.pinv(jacobian)
-        print("jacobian inverse:{}".format(J_inv.shape))
         dq = J_inv @ dy
 
         return dq
@@ -782,20 +771,8 @@ class Simulation(Simulation_base):
         effector and target position
         @rtype x, y: np.ndarray(), np.ndarray
         """
-        # TEST: test by moving arm to known place
-        # PASS: works when you fix the control set points
-
-        # TEST: add kinematic chain prescription
-        # PASS:
-
         # TEST: cubic interpolation
         # FAIL: wobbling at every trajectory interpolation step 
-        # TEST: control for a specific eef orientation
-        # FAIL: Very erratic joint space behaviour
-
-        # TODO: change position and orientation variables to reflect tedrake
-        # notation
-        # DONE:
 
         # TODO: raise exception/warning when inverse kinematics cannot reach
         # the target position
@@ -810,11 +787,6 @@ class Simulation(Simulation_base):
         # function then reads this configuration and estimates torque from the
         # tuned PID controller. It iterates through the joints only within the
         # current kinematic chain and sets the motor torques.
-
-        # QUE: Am i sure that I have transformed all the positions and
-        # orientations w.r.t the source frame
-        # ANS: initial position and orientations - yes, target position
-        # FIX: target orientations 
 
         # QUE: what does `getJointOrientation` return? what is stored in the
         # jointAxis dictionary? what representations should I be using?
@@ -865,11 +837,6 @@ class Simulation(Simulation_base):
                 num=interpolationSteps)
 
         # spherical linear interpolation in end-effector space
-        # TODO: change orientations to a scipy.Rotations object
-        # FIX: fix the orientation slerp
-        # DOUBT: are the angles in radians or degrees?
-        # ANS: angles from outide the class are in radians
-        # DOUBT: check if order of euler angles is actually 'xyz'
         if targetOrientation is not None:
             tar_ori = npRotation.from_matrix(R_ST)
             start_ori = npRotation.from_matrix(R_ST_init)
@@ -895,9 +862,30 @@ class Simulation(Simulation_base):
             if targetOrientation is not None:
                 orientation_goal = orientation_steps[i, :]
 
-            # TODO: break after threshold reached, check for threshiold reached
-            if np.linalg.norm(translation_goal - p_ST_S) < threshold:
-                break
+            # TODO: break after threshold reached, check for threshold reached
+            if targetOrientation is not None:
+                curr_pos = self.getJointPosition(
+                        endEffector,
+                        sourceFrame=sourceFrame)
+                curr_ori = npRotation.from_matrix(
+                        self.getJointLocationAndOrientation(
+                            endEffector,
+                            sourceFrame=sourceFrame)[1]).as_euler('xyz')
+                translation_threshold = np.linalg.norm(curr_pos - p_ST_S)
+                orientation_threshold = np.linalg.norm(curr_ori - tar_ori.as_euler('xyz'))
+
+                if (translation_threshold <= threshold) & (
+                        orientation_threshold <= threshold):
+                    print("target position and orientation reached! ")
+                    break
+            else:
+                current_pos = self.getJointPosition(
+                        endEffector,
+                        sourceFrame=sourceFrame)
+                translation_threshold = np.linalg.norm(curr_pos - p_ST_S)
+                if translation_threshold <= threshold:
+                    print("target position and orientation reached! ")
+                    break
 
             # TODO: break after maxIter reached
 
