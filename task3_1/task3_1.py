@@ -73,20 +73,20 @@ def getReadyForTask():
         globalScaling=1.4
     )
     cubeId = sim.p.loadURDF(
-        fileName            = abs_path+"/lib/task_urdfs/cubes/cube_small.urdf",
-        basePosition        = [0.33, 0, 1.0],
-        baseOrientation     = sim.p.getQuaternionFromEuler([0, 0, 0]),
-        useFixedBase        = False,
-        globalScaling       = 1.4
+        fileName=abs_path+"/lib/task_urdfs/cubes/cube_small.urdf",
+        basePosition=[0.33, 0, 1.0],
+        baseOrientation=sim.p.getQuaternionFromEuler([0, 0, 0]),
+        useFixedBase=False,
+        globalScaling=1.4
     )
     sim.p.resetVisualShapeData(cubeId, -1, rgbaColor=[1, 1, 0, 1])
 
     targetId = sim.p.loadURDF(
-        fileName            = abs_path+"/lib/task_urdfs/task3_1_target_compiled.urdf",
-        basePosition        = finalTargetPos,
-        baseOrientation     = sim.p.getQuaternionFromEuler([0, 0, math.pi]),
-        useFixedBase        = True,
-        globalScaling       = 1
+        fileName=abs_path+"/lib/task_urdfs/task3_1_target_compiled.urdf",
+        basePosition=finalTargetPos,
+        baseOrientation=sim.p.getQuaternionFromEuler([0, 0, math.pi]),
+        useFixedBase=True,
+        globalScaling=1
     )
     for _ in range(200):
         sim.tick()
@@ -102,11 +102,21 @@ def solution():
 
     # targetPosition = [0.33, 0, 1.20]
     endEffector = "RARM_JOINT5"
-    temp = sim.getJointPosition(endEffector, sourceFrame='world') + np.array([0.0,
-                                                                         0.1, 0.2])
+    temp = sim.getJointPosition(
+            endEffector,
+            sourceFrame='world') + np.array(
+                    [0.0, 0.1, 0.2])
     targetPosition = temp
     # targetPosition = finalTargetPos
-    targetOrientation = sim.p.getQuaternionFromEuler([math.pi/18, 0, 0])
+    targetOrientation = sim.p.getQuaternionFromEuler([math.pi/36, 0, 0])
+    waypointID = sim.p.loadURDF(
+        fileName=abs_path+"/lib/task_urdfs/task3_1_target_compiled.urdf",
+        basePosition=targetPosition,
+        baseOrientation=targetOrientation,
+        useFixedBase=True,
+        globalScaling=0.5
+    )
+    sim.p.resetVisualShapeData(waypointID, -1, rgbaColor=[1, 0, 0, 0.5])
     # targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
     # targetOrientation = sim.p.getQuaternionFromEuler(
     #         sim.getJointOrientation(
