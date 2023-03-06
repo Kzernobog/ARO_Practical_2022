@@ -65,8 +65,8 @@ class Simulation(Simulation_base):
             'RARM_JOINT3': np.array([1, 0, 0]),
             'RARM_JOINT4': np.array([0, 1, 0]),
             'RARM_JOINT5': np.array([0, 0, 1]),
-            #'RHAND'      : np.array([0, 0, 0]),
-            #'LHAND'      : np.array([0, 0, 0])
+            'RHAND'      : np.array([0, 0, 0]),
+            'LHAND'      : np.array([0, 0, 0])
         }
 
 
@@ -88,8 +88,8 @@ class Simulation(Simulation_base):
             'RARM_JOINT3': np.array([0.1805, 0, -0.03]),
             'RARM_JOINT4': np.array([0.1495, 0, 0]),
             'RARM_JOINT5': np.array([0, 0, -0.1335]),
-            #'RHAND'      : np.array([0, 0, 0]), # optional
-            #'LHAND'      : np.array([0, 0, 0]) # optional
+            'RHAND'      : np.array([0, 0, 0]), # optional
+            'LHAND'      : np.array([0, 0, 0]) # optional
         }
 
         self.headchain = {'base_to_waist': 1, 'CHEST_JOINT0': 2, 'HEAD_JOINT0':
@@ -451,14 +451,16 @@ class Simulation(Simulation_base):
         # positions for all joints after performing inverse kinematics.
         # takes in next step in interpolation and returns the dq required to
         # move the endeffector to the targetposition
-        J_pos, J_ori = self.jacobianMatrix(endEffector, sourceFrame=sourceFrame)
+        J_pos, J_ori = self.jacobianMatrix(
+                endEffector,
+                sourceFrame=sourceFrame)
         if oriJacob:
             jacobian = np.vstack((J_pos, J_ori))
             trans_delta = targetPosition - self.getJointPosition(
                     endEffector,
                     sourceFrame=sourceFrame)
             # DEBG: the following snippet uses the member function
-            # this member function does something with a refvector, no idea 
+            # this member function does something with a refvector, no idea
             # what that is.
             # current_ori = self.getJointOrientation(
             #         endEffector,
@@ -471,8 +473,9 @@ class Simulation(Simulation_base):
             dy = np.hstack((trans_delta, ori_delta))
         else:
             jacobian = J_pos
-            dy = targetPosition - self.getJointPosition(endEffector,
-                                                        sourceFrame=sourceFrame)
+            dy = targetPosition - self.getJointPosition(
+                    endEffector,
+                    sourceFrame=sourceFrame)
 
         J_inv = np.linalg.pinv(jacobian)
         dq = J_inv @ dy
@@ -1053,13 +1056,6 @@ class Simulation(Simulation_base):
             # A naive gravitiy compensation is provided for you
             # If you have embeded a better compensation, feel free to modify
             compensation = self.jointGravCompensation[joint]
-            self.p.applyExternalForce(
-                objectUniqueId=self.robot,
-                linkIndex=self.jointIds[joint],
-                forceObj=[0, 0, -compensation],
-                posObj=self.getLinkCoM(joint),
-                flags=self.p.WORLD_FRAME
-            )
             # Gravity compensation ends here
 
         self.p.stepSimulation()
@@ -1112,9 +1108,14 @@ class Simulation(Simulation_base):
         pass
 
     # Task 3.2 Grasping & Docking
-    def clamp(self, leftTargetAngle, rightTargetAngle, angularSpeed=0.005, threshold=1e-1, maxIter=300, verbose=False):
+    def clamp(
+            self,
+            leftTargetAngle,
+            rightTargetAngle,
+            angularSpeed=0.005,
+            threshold=1e-1,
+            maxIter=300,
+            verbose=False):
         """A template function for you, you are free to use anything else"""
         # TODO: Append your code here
         pass
-
- ### END

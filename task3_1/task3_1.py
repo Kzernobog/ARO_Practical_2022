@@ -47,7 +47,7 @@ robotConfigs = {
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
     "fixedBase": True,
-    "colored": False
+    "colored": True
 }
 
 sim = Simulation(pybulletConfigs, robotConfigs)
@@ -97,12 +97,14 @@ def getReadyForTask():
 
 
 def solution():
-    # TODO: Move the LHAND5 .
+    # TODO: Move the LHAND5 link.
     # STATUS: Orientation and position control working. Change kinematic chain
     # logic to command links rather than joints
 
     # targetPosition = [0.33, 0, 1.20]
-    endEffector = "RARM_JOINT5_link"
+    # print(sim.showJoints())
+    endEffector = "RARM_JOINT5"
+    # endEffector = "RHAND"
     temp = sim.getJointPosition(
             endEffector,
             sourceFrame='world') + np.array(
