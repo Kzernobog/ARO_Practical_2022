@@ -58,9 +58,10 @@ def getReadyForTask():
     # compile urdfs
     finalTargetPos = np.array([0.7, 0.00, 0.91])
     urdf_compiler_path = core_path + "/urdf_compiler.py"
-    subprocess.call([urdf_compiler_path,
-                     "-o", abs_path+"/lib/task_urdfs/task3_1_target_compiled.urdf",
-                     abs_path+"/lib/task_urdfs/task3_1_target.urdf"])
+    subprocess.call(
+            [urdf_compiler_path, "-o", abs_path +
+             "/lib/task_urdfs/task3_1_target_compiled.urdf",
+             abs_path+"/lib/task_urdfs/task3_1_target.urdf"])
 
     sim.p.resetJointState(bodyUniqueId=1, jointIndex=12, targetValue=-0.4)
     sim.p.resetJointState(bodyUniqueId=1, jointIndex=6, targetValue=-0.4)
@@ -97,11 +98,11 @@ def getReadyForTask():
 
 def solution():
     # TODO: Move the LHAND5 .
-    # STATUS: `move_without_PD` seems to be moving the end-effector.
-    # `move_with_PD` behaves erratically.
+    # STATUS: Orientation and position control working. Change kinematic chain
+    # logic to command links rather than joints
 
     # targetPosition = [0.33, 0, 1.20]
-    endEffector = "RARM_JOINT5"
+    endEffector = "RARM_JOINT5_link"
     temp = sim.getJointPosition(
             endEffector,
             sourceFrame='world') + np.array(
@@ -116,7 +117,7 @@ def solution():
         useFixedBase=True,
         globalScaling=0.5
     )
-    sim.p.resetVisualShapeData(waypointID, -1, rgbaColor=[1, 0, 0, 0.5])
+    sim.p.resetVisualShapeData(waypointID, -1, rgbaColor=[1, 0, 0, 0.3])
     # targetOrientation = sim.p.getQuaternionFromEuler([5.0, 0, 0])
     # targetOrientation = sim.p.getQuaternionFromEuler(
     #         sim.getJointOrientation(
@@ -125,7 +126,7 @@ def solution():
     # baseFrame = 'world'
     baseFrame = 'CHEST_JOINT0'
     interpSteps = 10
-    controlFrequency = 1000
+    controlFrequency = 500
     sim.move_with_PD(endEffector,
                      targetPosition,
                      interpSteps,
