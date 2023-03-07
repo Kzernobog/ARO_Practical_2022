@@ -65,8 +65,8 @@ class Simulation(Simulation_base):
             'RARM_JOINT3': np.array([1, 0, 0]),
             'RARM_JOINT4': np.array([0, 1, 0]),
             'RARM_JOINT5': np.array([0, 0, 1]),
-            'RHAND'      : np.array([0, 0, 0]),
-            'LHAND'      : np.array([0, 0, 0])
+            # 'RHAND'      : np.array([0, 0, 0]),
+            # 'LHAND'      : np.array([0, 0, 0])
         }
 
 
@@ -88,8 +88,8 @@ class Simulation(Simulation_base):
             'RARM_JOINT3': np.array([0.1805, 0, -0.03]),
             'RARM_JOINT4': np.array([0.1495, 0, 0]),
             'RARM_JOINT5': np.array([0, 0, -0.1335]),
-            'RHAND'      : np.array([0, 0, 0]), # optional
-            'LHAND'      : np.array([0, 0, 0]) # optional
+            # 'RHAND'      : np.array([0, 0, 0]), # optional
+            # 'LHAND'      : np.array([0, 0, 0]) # optional
         }
 
         self.headchain = {'base_to_waist': 1, 'CHEST_JOINT0': 2, 'HEAD_JOINT0':
@@ -149,11 +149,6 @@ class Simulation(Simulation_base):
             kinematic_chain = kinematic_chain[
                 kinematic_chain.index(sourceFrame)+1:]
 
-        # DEL:  print the kinematic chain
-        # print("kinematic chain, source frame, jointName: {}, {}, {}".format(
-        #     kinematic_chain,
-        #     sourceFrame,
-        #     jointName))
         return kinematic_chain
 
     def getJointRotationalMatrix(self, jointName=None, theta=None):
@@ -215,7 +210,6 @@ class Simulation(Simulation_base):
             # add [0, 0, 0, 1] as a row
             transform_matrix = np.asarray(np.vstack((temp, np.array([0, 0, 0,
                                                                      1]))))
-
 
             assert transform_matrix.shape == (4, 4), "Incorrect transformation matrix assembled"
 
@@ -1002,6 +996,10 @@ class Simulation(Simulation_base):
 
             # disable joint velocity controller before apply a torque
             self.disableVelocityController(joint)
+
+            # BP:
+            temp = self.getLinkState(joint)
+            breakpoint()
 
             # loads your PID gains
             kp = self.ctrlConfig[jointController]['pid']['p']

@@ -10,7 +10,7 @@ import yaml
 class Simulation_base:
     """A Bullet simulation involving Nextage robot"""
 
-    ########## Class initialiser ##########
+    # Class initialiser
     def __init__(self, pybulletConfigs, robotConfigs):
         """Creates a simulation instance with Nextage robot
         Keyword Arguments:
@@ -232,13 +232,13 @@ class Simulation_base:
         # Finishing up and show no of joints
         print('[Simulation] Found '+str(len(self.jointIds))+' DOFs')
 
-    ########## Destructor ##########
+    # Destructor
     def __del__(self):
         self.p.disconnect()
         time.sleep(1)
         print(f'[Simulation] Leaving')
 
-    ########## Setting up tools ##########
+    # Setting up tools
     def setFloorFrictions(self, lateral=1, spinning=-1, rolling=-1):
         """Sets the frictions with the plane object
 
