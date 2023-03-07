@@ -56,7 +56,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/BASE_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/BASE_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -105,7 +105,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/WAIST_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/WAIST_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -125,7 +125,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/CHEST_JOINT0_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/CHEST_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -181,7 +181,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/HEAD_JOINT0_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/HEAD_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -201,7 +201,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/HEAD_JOINT1_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/HEAD_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -221,7 +221,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT0_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -253,7 +253,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT1_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -279,7 +279,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT2_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT2_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -311,7 +311,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT3_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT3_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -343,7 +343,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT4_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT4_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -369,13 +369,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT5_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT5_Link_mesh.obj"/>
       </geometry>
     </visual>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/L_CAM.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/L_CAM.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -401,7 +401,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT0_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -433,7 +433,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT1_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -459,7 +459,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT2_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT2_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -491,7 +491,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT3_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT3_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -523,7 +523,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT4_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT4_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -549,13 +549,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT5_Link_mesh.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT5_Link_mesh.obj"/>
       </geometry>
     </visual>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://nextagea_description/urdf/meshes/R_CAM.obj"/>
+        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/R_CAM.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -608,7 +608,7 @@
     <origin rpy="0 0 0" xyz="0.04 0.135 0.1015"/>
     <axis xyz="0 0 1"/>
     <limit effort="150" lower="-1.5707963" upper="1.5707963" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="LARM_JOINT1" type="revolute">
@@ -617,7 +617,7 @@
     <origin rpy="0 0 0" xyz="0 0 0.066"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-2.44346" upper="1.0471975" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="LARM_JOINT2" type="revolute">
@@ -626,7 +626,7 @@
     <origin rpy="0 0 0" xyz="0 0.095 -0.25"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-1.22173" upper="1.5707963" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
   
   <joint name="LARM_JOINT3" type="revolute">
@@ -635,7 +635,7 @@
     <origin rpy="0 0 0" xyz="0.1805 0 -0.03"/>
     <axis xyz="1 0 0"/>
     <limit effort="150" lower="-3.1415926" upper="1.7453292" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="LARM_JOINT4" type="revolute">
@@ -644,7 +644,7 @@
     <origin rpy="0 0 0" xyz="0.1495 0 0"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-3.57792" upper="1.134464" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="LARM_JOINT5" type="revolute">
@@ -653,7 +653,7 @@
     <origin rpy="0 0 0" xyz="0 0 -0.1335"/>
     <axis xyz="0 0 1"/>
     <limit effort="150" lower="-2.7123889" upper="2.7123889" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT0" type="revolute">
@@ -662,7 +662,7 @@
     <origin rpy="0 0 0" xyz="0.04 -0.135 0.1015"/>
     <axis xyz="0 0 1"/>
     <limit effort="150" lower="-1.570796" upper="1.570796" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT1" type="revolute">
@@ -671,7 +671,7 @@
     <origin rpy="0 0 0" xyz="0 0 0.066"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-2.44346" upper="1.047197" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT2" type="revolute">
@@ -680,7 +680,7 @@
     <origin rpy="0 0 0" xyz="0 -0.095 -0.25"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-1.22173" upper="1.570796" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT3" type="revolute">
@@ -689,7 +689,7 @@
     <origin rpy="0 0 0" xyz="0.1805 0 -0.03"/>
     <axis xyz="1 0 0"/>
     <limit effort="150" lower="-1.74532" upper="3.141592" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT4" type="revolute">
@@ -698,7 +698,7 @@
     <origin rpy="0 0 0" xyz="0.1495 0 0"/>
     <axis xyz="0 1 0"/>
     <limit effort="150" lower="-3.5779" upper="1.134464" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
   <joint name="RARM_JOINT5" type="revolute">
@@ -707,7 +707,7 @@
     <origin rpy="0 0 0" xyz="0 0 -0.1335"/>
     <axis xyz="0 0 1"/>
     <limit effort="150" lower="-2.712388" upper="2.712388" velocity="1.0"/>
-    <dynamics damping="0.5" friction="0.5"/>
+    <dynamics damping="0.5" friction="0.0"/>
   </joint>
 
 </robot>

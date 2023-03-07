@@ -1,6 +1,7 @@
 # System related imports
 import sys
 import os
+import time
 sys.path.append('/home/aditya/Documents/projects/manipulation')
 abs_path = os.path.dirname(os.path.realpath(__file__))
 root_path = abs_path + '/..'
@@ -29,10 +30,17 @@ class Simulation:
         nextage_model_url = core_path+'/nextagea_description/urdf/NextageaOpenObj.urdf'
         self.visualizer.parser().AddModels(nextage_model_url)
 
+    def run(self):
+        self.visualizer.Run(loop_once=False)
+
 
 if __name__ == "__main__":
     sim = Simulation()
     sim.initialise()
+    try:
+        sim.run()
+    except KeyboardInterrupt:
+        sys.exit()
 
 
 
