@@ -997,10 +997,6 @@ class Simulation(Simulation_base):
             # disable joint velocity controller before apply a torque
             self.disableVelocityController(joint)
 
-            # BP:
-            temp = self.getLinkState(joint)
-            breakpoint()
-
             # loads your PID gains
             kp = self.ctrlConfig[jointController]['pid']['p']
             ki = self.ctrlConfig[jointController]['pid']['i']
@@ -1054,6 +1050,13 @@ class Simulation(Simulation_base):
             # A naive gravitiy compensation is provided for you
             # If you have embeded a better compensation, feel free to modify
             compensation = self.jointGravCompensation[joint]
+            self.p.applyExternalForce(
+                objectUniqueId=self.robot,
+                linkIndex=self.jointIds[joint],
+                forceObj=[0, 0, -compensation],
+                posObj=self.getLinkCoM(joint),
+                flags=self.p.WORLD_FRAME
+            )
             # Gravity compensation ends here
 
         self.p.stepSimulation()
