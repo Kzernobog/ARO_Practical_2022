@@ -868,13 +868,13 @@ class Simulation(Simulation_base):
                         self.getJointLocationAndOrientation(
                             endEffector,
                             sourceFrame=sourceFrame)[1]).as_euler('xyz')
-                translation_threshold = np.linalg.norm(curr_pos - p_ST_S)
-                orientation_threshold = np.linalg.norm(curr_ori - tar_ori.as_euler('xyz'))
+                translation_threshold = np.linalg.norm(
+                        curr_pos - translation_goal)
+                # orientation_threshold = np.linalg.norm(curr_ori - tar_ori.as_euler('xyz'))
 
-                if (translation_threshold <= threshold) & (
-                        orientation_threshold <= threshold):
+                if (translation_threshold <= threshold):
                     print("target position and orientation reached! ")
-                    break
+                    continue
             else:
                 current_pos = self.getJointPosition(
                         endEffector,
@@ -882,7 +882,8 @@ class Simulation(Simulation_base):
                 translation_threshold = np.linalg.norm(curr_pos - p_ST_S)
                 if translation_threshold <= threshold:
                     print("target position and orientation reached! ")
-                    break
+                    continue
+
 
             # TODO: break after maxIter reached
 

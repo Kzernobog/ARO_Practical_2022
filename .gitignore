@@ -2,3 +2,5 @@
 core/__pycache__/
 core.egg-info
 dist
+output/
+utils/models/

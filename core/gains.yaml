@@ -1,0 +1,66 @@
+
+  # Position Controllers (arms) ---------------------------------------
+CHEST_JOINT0_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: CHEST_JOINT0
+  pid: {p: 200, i: 0.01, d: 10.0}
+HEAD_JOINT0_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: HEAD_JOINT0
+  pid: {p: 10, i: 0.01, d: 1.0}
+HEAD_JOINT1_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: HEAD_JOINT1
+  pid: {p: 10, i: 0.01, d: 1.0}
+
+
+LARM_JOINT0_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT0
+  pid: {p: 200, i: 0.01, d: 10.0}
+LARM_JOINT1_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT1
+  pid: {p: 600, i: .01, d: 15.0}
+LARM_JOINT2_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT2
+  pid: {p: 500, i: 0.067, d: 15.0}
+LARM_JOINT3_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT3
+  pid: {p: 300, i: 0.01, d: 10.0}
+LARM_JOINT4_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT4
+  pid: {p: 100, i: 0.01, d: 10.0}
+LARM_JOINT5_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: LARM_JOINT5
+  pid: {p: 10, i: 0.0003, d: 1.0}
+
+RARM_JOINT0_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT0
+  pid: {p: 200, i: 0.01, d: 10.0}
+RARM_JOINT1_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT1
+  pid: {p: 600, i: .01, d: 15.0}
+RARM_JOINT2_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT2
+  pid: {p: 500, i: 0.067, d: 15.0}
+RARM_JOINT3_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT3
+  pid: {p: 300, i: 0.01, d: 10.0}
+RARM_JOINT4_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT4
+  pid: {p: 100, i: 0.01, d: 10.0}
+RARM_JOINT5_position_controller:
+  type: effort_controllers/JointPositionController
+  joint: RARM_JOINT5
+  pid: {p: 10, i: 0.0003, d: 1.0}
+

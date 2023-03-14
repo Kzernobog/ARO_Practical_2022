@@ -43,7 +43,7 @@ pybulletConfigs = {
 }
 robotConfigs = {
     "robotPath": core_path + "/nextagea_description/urdf/NextageaOpen.urdf",
-    "robotPIDConfigs": core_path + "/PD_gains.yaml",
+    "robotPIDConfigs": core_path + "/gains.yaml",
     "robotStartPos": [0, 0, 0.85],
     "robotStartOrientation": [0, 0, 0, 1],
     "fixedBase": True,
