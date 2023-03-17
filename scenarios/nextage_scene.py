@@ -116,7 +116,7 @@ class Simulation:
         parser = Parser(plant)
 
         # Loading models.
-        # Load a cracker box from Drake. 
+        # Load a cracker box from Drake.
         parser.AddModels(
                 url="package://drake/manipulation/models/ycb/sdf/003_cracker_box.sdf")
         # Load the table top and the cylinder we created.
@@ -189,7 +189,7 @@ class PseudoInverseController(LeafSystem):
         J_G = self._plant.CalcJacobianSpatialVelocity(
                 self._plant_context, JacobianWrtVariable.kQDot,
                 self._G, [0, 0, 0], self._W, self._W)
-        J_G = J_G[:, 0:7] # ignore gripper terms
+        J_G = J_G[:, 0:7]  # ignore gripper terms
 
         V_G_desired = np.array([0,
                                 -0.1,
