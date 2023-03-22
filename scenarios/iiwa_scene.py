@@ -288,7 +288,7 @@ def iiwa_control():
     diagram.set_name("pick_and_place")
     pydot.graph_from_dot_data(
         diagram.GetGraphvizString(
-            max_depth=1))[0].write_svg('./output/iiwa.svg')
+            max_depth=1))[0].write_svg('./output/iiwa_depth1.svg')
 
     simulator = Simulator(diagram)
     context = simulator.get_mutable_context()

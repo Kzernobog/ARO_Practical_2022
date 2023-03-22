@@ -287,20 +287,72 @@ def MakeNextageStation():
     return diagram
 
 
-def MakeGripperPoseTrajectory(X_G, times):
+def MakeGripperPoseTrajectory(X_G, times, names):
     """
     Constructs a gripper position trajectory from the plan "sketch".
     """
 
     sample_times = []
     poses = []
-    for name in ["initial", "prepick", "pick_start", "pick_end", "postpick",
-                 "clearance", "preplace", "place_start", "place_end",
-                 "postplace"]:
+    for name in names:
         sample_times.append(times[name])
         poses.append(X_G[name])
 
     return PiecewisePose.MakeLinear(sample_times, poses)
+
+
+def MakeGripperFrames(X_G, X_O):
+    """
+    Takes a partial specification with X_G["initial"] and X_O["initial"] and
+    X_0["goal"], and returns a X_G and times with all of the pick and place
+    frames populated.
+    """
+    # Define (again) the gripper pose relative to the object when in grasp.
+    p_GgraspO = [0, 0.11, 0]
+    R_GgraspO = RotationMatrix.MakeXRotation(
+        np.pi / 2.0) @ RotationMatrix.MakeZRotation(np.pi / 2.0)
+    X_GgraspO = RigidTransform(R_GgraspO, p_GgraspO)
+    X_OGgrasp = X_GgraspO.inverse()
+    # pregrasp is negative y in the gripper frame (see the figure!).
+    X_GgraspGpregrasp = RigidTransform([0, -0.08, 0])
+
+    X_G["pick"] = X_O["initial"] @ X_OGgrasp
+    X_G["prepick"] = X_G["pick"] @ X_GgraspGpregrasp
+    X_G["place"] = X_O["goal"] @ X_OGgrasp
+    X_G["preplace"] = X_G["place"] @ X_GgraspGpregrasp
+
+    # I'll interpolate a halfway orientation by converting to axis angle and halving the angle.
+    X_GprepickGpreplace = X_G["prepick"].inverse() @ X_G["preplace"]
+    angle_axis = X_GprepickGpreplace.rotation().ToAngleAxis()
+    X_GprepickGclearance = RigidTransform(
+        AngleAxis(angle=angle_axis.angle() / 2.0, axis=angle_axis.axis()),
+        X_GprepickGpreplace.translation() / 2.0 + np.array([0, -0.3, 0]))
+    X_G["clearance"] = X_G["prepick"] @ X_GprepickGclearance
+
+    # Now let's set the timing
+    times = {"initial": 0}
+    X_GinitialGprepick = X_G["initial"].inverse() @ X_G["prepick"]
+    times["prepick"] = times["initial"] + 10.0 * np.linalg.norm(
+        X_GinitialGprepick.translation())
+    # Allow some time for the gripper to close.
+    times["pick_start"] = times["prepick"] + 2.0
+    times["pick_end"] = times["pick_start"] + 2.0
+    X_G["pick_start"] = X_G["pick"]
+    X_G["pick_end"] = X_G["pick"]
+    times["postpick"] = times["pick_end"] + 2.0
+    X_G["postpick"] = X_G["prepick"]
+    time_to_from_clearance = 10.0 * np.linalg.norm(
+        X_GprepickGclearance.translation())
+    times["clearance"] = times["postpick"] + time_to_from_clearance
+    times["preplace"] = times["clearance"] + time_to_from_clearance
+    times["place_start"] = times["preplace"] + 2.0
+    times["place_end"] = times["place_start"] + 2.0
+    X_G["place_start"] = X_G["place"]
+    X_G["place_end"] = X_G["place"]
+    times["postplace"] = times["place_end"] + 2.0
+    X_G["postplace"] = X_G["preplace"]
+
+    return X_G, times
 
 
 def MakeGripperFrames(X_G, X_O):
@@ -372,6 +424,8 @@ def nextage_control():
     initial_context = station.CreateDefaultContext()
     initial_plant_context = plant.GetMyContextFromRoot(
             initial_context)
+
+    # reading object and eef poses from the scene context
     X_O = {
             'initial': plant.EvalBodyPoseInWorld(
                 initial_plant_context,
@@ -384,11 +438,34 @@ def nextage_control():
                 plant.GetBodyByName("RARM_JOINT5_Link"))
             }
 
+    X_G, times = MakeGripperFrames(X_G, X_O)
+
+    # filter out only the following frames
+    names = ['initial', 'prepick']
+
+    traj = MakeGripperPoseTrajectory(X_G, times, names)
+    traj_p_G = traj.get_position_trajectory()
+    traj_V_G = traj.MakeDerivative()
+
+    # create a trajectory system
+    V_G_source = builder.AddSystem(TrajectorySource(traj_V_G))
+    V_G_source.set_name("v_WG")
+    controller = builder.AddSystem(PseudoInverseVelocityController(plant))
+    controller.set_name("PseudoInverseController")
+    builder.Connect(V_G_source.get_output_port(), controller.GetInputPort("V_WG"))
+
+
+
+
+
+
     pydot.graph_from_dot_data(
             station.GetGraphvizString(
                 max_depth=1))[0].write_svg('./output/debug.svg')
 
-    # TODO: setup pseudo-inverse controller
+    # TODO: setup trajectory generator
+    # TODO: setup controller
+    # TODO: setup pseudo-inverse MP
 
     return
 
