@@ -56,7 +56,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/BASE_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/BASE_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -105,7 +105,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/WAIST_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/WAIST_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -125,7 +125,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/CHEST_JOINT0_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/CHEST_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -181,7 +181,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/HEAD_JOINT0_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/HEAD_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -201,7 +201,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/HEAD_JOINT1_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/HEAD_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -221,7 +221,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT0_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -253,7 +253,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT1_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -279,7 +279,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT2_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT2_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -311,7 +311,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT3_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT3_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -343,7 +343,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT4_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT4_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -369,13 +369,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/LARM_JOINT5_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/LARM_JOINT5_Link_mesh.obj"/>
       </geometry>
     </visual>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/L_CAM.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/L_CAM.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -401,7 +401,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT0_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT0_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -433,7 +433,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT1_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT1_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -459,7 +459,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT2_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT2_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -491,7 +491,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT3_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT3_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -523,7 +523,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT4_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT4_Link_mesh.obj"/>
       </geometry>
     </visual>
     <collision>
@@ -549,13 +549,13 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/RARM_JOINT5_Link_mesh.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/RARM_JOINT5_Link_mesh.obj"/>
       </geometry>
     </visual>
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/aditya/Documents/projects/avro22/ARO_Practical_2022/scenarios/../core/nextagea_description/urdf/meshes/R_CAM.obj"/>
+        <mesh filename="package://nextagea_description/urdf/meshes/R_CAM.obj"/>
       </geometry>
     </visual>
     <collision>

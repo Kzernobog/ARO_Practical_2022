@@ -235,6 +235,11 @@ def iiwa_control():
     """
     station = builder.AddSystem(
         MakeManipulationStation(model_directives=model_directives))
+
+    pydot.graph_from_dot_data(
+        station.GetGraphvizString(
+            max_depth=1))[0].write_svg('./output/scenes/iiwa_manipulation.svg')
+
     plant = station.GetSubsystemByName("plant")
     plant.SetDefaultFreeBodyPose(
             plant.GetBodyByName("base_link"),
@@ -288,7 +293,7 @@ def iiwa_control():
     diagram.set_name("pick_and_place")
     pydot.graph_from_dot_data(
         diagram.GetGraphvizString(
-            max_depth=1))[0].write_svg('./output/iiwa_depth1.svg')
+            max_depth=1))[0].write_svg('./output/scenes/iiwa_depth1.svg')
 
     simulator = Simulator(diagram)
     context = simulator.get_mutable_context()

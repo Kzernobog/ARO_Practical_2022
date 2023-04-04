@@ -191,10 +191,19 @@ def AddShape(plant, shape, name, mass=1, mu=1, color=[.5, .5, .9, 1.0]):
                             CoulombFriction(mu, mu))
                         i += 1
         else:
-            plant.RegisterCollisionGeometry(body, RigidTransform(), shape, name,
-                                            CoulombFriction(mu, mu))
+            plant.RegisterCollisionGeometry(
+                    body,
+                    RigidTransform(),
+                    shape,
+                    name,
+                    CoulombFriction(mu, mu))
 
-        plant.RegisterVisualGeometry(body, RigidTransform(), shape, name, color)
+        plant.RegisterVisualGeometry(
+                body,
+                RigidTransform(),
+                shape,
+                name,
+                color)
 
     return instance
 
@@ -323,9 +332,9 @@ def AddRgbdSensors(builder,
             if also_add_point_clouds:
                 # Add a system to convert the camera output into a point cloud
                 to_point_cloud = builder.AddSystem(
-                    DepthImageToPointCloud(camera_info=rgbd.depth_camera_info(),
-                                           fields=BaseField.kXYZs
-                                           | BaseField.kRGBs))
+                    DepthImageToPointCloud(
+                        camera_info=rgbd.depth_camera_info(),
+                        fields=BaseField.kXYZs | BaseField.kRGBs))
                 builder.Connect(rgbd.depth_image_32F_output_port(),
                                 to_point_cloud.depth_image_input_port())
                 builder.Connect(rgbd.color_image_output_port(),
