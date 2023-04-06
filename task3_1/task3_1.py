@@ -51,6 +51,11 @@ robotConfigs = {
 }
 
 sim = Simulation(pybulletConfigs, robotConfigs)
+# DEBG: print out default joint values
+for key in sim.jointRotationAxis.keys():
+    # retrieve the corresponding joint angle from getJointPos
+    print("joint: {}, default position: {}".format(key, sim.getJointPos(key)))
+sys.exit()
 
 
 def getReadyForTask():
@@ -103,6 +108,14 @@ def solution():
 
     # targetPosition = [0.33, 0, 1.20]
     # print(sim.showJoints())
+
+    # DEBG: print out default joint values
+    for key in sim.jointRotationAxis.keys():
+        # retrieve the corresponding joint angle from getJointPos
+        print("joint: {}, default position: {}".format(key, sim.getJointPos(key)))
+    sys.exit()
+
+
     endEffector = "RARM_JOINT5"
     # endEffector = "RHAND"
     temp = sim.getJointPosition(

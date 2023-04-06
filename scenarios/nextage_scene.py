@@ -26,7 +26,7 @@ from pydrake.all import (AddMultibodyPlantSceneGraph, AngleAxis,
                          TrajectorySource, PidController, ModelInstanceIndex,
                          PassThrough, StateInterpolatorWithDiscreteDerivative,
                          Demultiplexer, PidControlledSystem, JointIndex,
-                         InverseDynamicsController)
+                         InverseDynamicsController, RevoluteJoint)
 
 
 
@@ -225,10 +225,16 @@ class PseudoInverseVelocityController(LeafSystem):
         # FIX: change input ports to reflect generic robot.
         # Class also needs to take runtime arguments w.r.t joints
         # to be controlled
-        self.V_G_port = self.DeclareVectorInputPort("V_WG", 6)
-        self.q_port = self.DeclareVectorInputPort("nextage_position", 7)
-        self.DeclareVectorOutputPort("nextage_velocity", 7,
-                                     self.CalcOutput)
+        self.V_G_port = self.DeclareVectorInputPort(
+                "V_WG",
+                self._config['eef_dimension'])
+        self.q_port = self.DeclareVectorInputPort(
+                "nextage_position",
+                self._config['actuators'])
+        self.DeclareVectorOutputPort(
+                "nextage_velocity",
+                self._config['actuators'],
+                self.CalcOutput)
         self.nextage_start = plant.GetJointByName(
                 config['kinematic_chain_start']).velocity_start()
         self.nextage_end = plant.GetJointByName(
@@ -239,12 +245,16 @@ class PseudoInverseVelocityController(LeafSystem):
         q = self.q_port.Eval(context)
         self._plant.SetPositions(
                 self._plant_context,
-                self._nextage,
+                self._robot,
                 q)
         # FIX: figure put the jacobian args
         J_G = self._plant.CalcJacobianSpatialVelocity(
-                self._plant_context, JacobianWrtVariable.kV,
-                self._G, [0, 0, 0], self._W, self._W)
+                self._plant_context,
+                JacobianWrtVariable.kV,
+                self._G,  # eef frame
+                [0, 0, 0],
+                self._W,  # w.r.t frame
+                self._W)  # expressed in frame
 
         # ignore gripper terms
         J_G = J_G[:, self.nextage_start:self.nextage_end+1]
@@ -258,17 +268,21 @@ def MakeNextageStation(
 
     # some necessary paths
     table_top_sdf_file = root_path+"/assets/table_top.sdf"
-    nextage_description = "/home/aditya/Documents/projects/avro22/ARO_Practical_2022/core/nextagea_description/"
+    # nextage_description = "/home/aditya/Documents/projects/avro22/ARO_Practical_2022
+    # /core/nextagea_description/"
+    nextage_description = "/home/aditya/Documents/projects/avro22/ARO_Practical_2022/core/nextage_description/"
 
     # a few robot related config
-    nextage_prefix = "NextageA"
+    nextage_prefix = "Nextage"
     num_nextage_positions = 5
 
     # get a system builder
     builder = DiagramBuilder()
 
     # Add physics and geometry engines
-    plant, scene_graph = AddMultibodyPlantSceneGraph(builder, time_step=0.0001)
+    plant, scene_graph = AddMultibodyPlantSceneGraph(
+            builder,
+            time_step=time_step)
 
     # SECTION: Simulation elements
 
@@ -280,25 +294,40 @@ def MakeNextageStation(
     parser = Parser(plant)
 
     parser.package_map().PopulateFromFolder(nextage_description)
+    # nextage_robot = parser.AddModelFromFile(
+    #         'core/nextagea_description/urdf/NextageaOpenObj.urdf')
     nextage_robot = parser.AddModelFromFile(
-            'core/nextagea_description/urdf/NextageaOpenObj.urdf')
+            'core/nextage_description/urdf/NextageOpenCompiled.urdf')
     # nextage_robot = parser.AddModels(
     #         'core/nextagea_description/urdf/NextageaOpenObj.urdf')
+
     table = parser.AddModelFromFile(table_top_sdf_file)
+
     parser.AddModelFromFile(
             root_path+"/task3_1"+"/lib/task_urdfs/cubes/cube_nextage.urdf")
 
     # arrange the models in the scene
-    robot_frame = plant.GetFrameByName("base_link", nextage_robot)
+    # robot_frame = plant.GetFrameByName("base_link", nextage_robot)
+    robot_frame = plant.GetFrameByName("WAIST", nextage_robot)
     table_frame = plant.GetFrameByName("table_top_center")
     plant.WeldFrames(
             frame_on_parent_F=plant.world_frame(),
             frame_on_child_M=robot_frame,
-            X_FM=xyz_rpy_deg([1, 0, 0.85], [0, 0, 0]))
+            X_FM=xyz_rpy_deg([-5.0, 0, 0], [0, 0, 0]))
     plant.WeldFrames(
             frame_on_parent_F=plant.world_frame(),
             frame_on_child_M=table_frame,
-            X_FM=xyz_rpy_deg([0.5, 0, 0.75], [0, 0, 0]))
+            X_FM=xyz_rpy_deg([0, 0, 0], [0, 0, 0]))
+
+    q0 = [0.0] * 15
+    index = 0
+    print("num joint indices: {}".format(len(plant.GetJointIndices(
+        nextage_robot))))
+    for joint_index in plant.GetJointIndices(nextage_robot):
+        joint = plant.get_mutable_joint(joint_index)
+        if isinstance(joint, RevoluteJoint):
+            joint.set_default_angle(q0[index])
+            index += 1
 
     plant.Finalize()
 
@@ -330,18 +359,32 @@ def MakeNextageStation(
     # control_only_nextage = controller_parser.AddModelFromFile(
     #         core_path +
     #         '/nextagea_description/urdf/NextageaOpenObj.urdf')
+    # control_only_nextage = controller_parser.AddModelFromFile(
+    #         'core/nextagea_description/urdf/NextageaOpenObj.urdf')
     control_only_nextage = controller_parser.AddModelFromFile(
-            'core/nextagea_description/urdf/NextageaOpenObj.urdf')
+            'core/nextage_description/urdf/NextageOpenCompiled.urdf')
     control_robot_frame = controller_plant.GetFrameByName(
-            "base_link",
+            "WAIST",
             control_only_nextage)
     controller_plant.WeldFrames(
             frame_on_parent_F=controller_plant.world_frame(),
             frame_on_child_M=control_robot_frame,
-            X_FM=xyz_rpy_deg([1, 0, 0.85], [0, 0, 0]))
+            X_FM=xyz_rpy_deg([-5.0, 0.0, 0.0], [0, 0, 0]))
+
+    q0 = [0.0] * 15
+    index = 0
+    print("num joint indices: {}".format(len(controller_plant.GetJointIndices(
+        control_only_nextage))))
+    for joint_index in controller_plant.GetJointIndices(control_only_nextage):
+        joint = controller_plant.get_mutable_joint(joint_index)
+        if isinstance(joint, RevoluteJoint):
+            joint.set_default_angle(q0[index])
+            index += 1
+
     controller_plant.Finalize()
 
     # DEBG: print out joint names and acutated joint names
+    # CODE: printing out actuation
     # joint_names = [joint.name()
     #                for joint in [controller_plant.get_joint(
     #                    JointIndex(i))
@@ -596,7 +639,7 @@ def nextage_control(config, robot_config):
     # TODO: add the nextage manipulation station
     # FIX: fix port design for nextage manipulation station
     station = builder.AddSystem(
-            MakeNextageStation())
+            MakeNextageStation(config['time_step']))
 
     # TODO: setup initial scene context
     plant = station.GetSubsystemByName("plant")
@@ -610,6 +653,7 @@ def nextage_control(config, robot_config):
                 initial_plant_context,
                 plant.GetBodyByName(config['object_initial_pose']))
             }
+    X_O['goal'] = RigidTransform(X_O['initial'].rotation().MakeXRotation(np.pi / 2.0), [0, 0, 0])
 
     X_G = {
             'initial': plant.EvalBodyPoseInWorld(
@@ -637,17 +681,17 @@ def nextage_control(config, robot_config):
         plant,
         robot_config))
     planner.set_name("PseudoInverseController")
-    integrator = builder.AddSystem(Integrator(7))
+    integrator = builder.AddSystem(Integrator(robot_config['actuators']))
     integrator.set_name("integrator")
     builder.Connect(planner.get_output_port(),
                     integrator.get_input_port())
     builder.Connect(integrator.get_output_port(),
-                    station.GetInputPort("NextageAOpen_position"))
+                    station.GetInputPort("NextageOpen_position"))
     builder.Connect(V_G_source.get_output_port(),
                     planner.GetInputPort("V_WG"))
 
     # FIX: change planner to reflect general robot
-    builder.Connect(station.GetOutputPort("NextageAOpen_position_measured"),
+    builder.Connect(station.GetOutputPort("NextageOpen_position_measured"),
                     planner.GetInputPort("nextage_position"))
 
     # TODO: Add a visualizer
@@ -665,6 +709,15 @@ def nextage_control(config, robot_config):
 
     # get a simulation
     simulator = Simulator(diagram)
+
+    # TODO: setup the initial robot configuration
+    sim_context = simulator.get_mutable_context()
+
+    station_context = station.GetMyMutableContextFromRoot(sim_context)
+    integrator.set_integral_value(
+            integrator.GetMyContextFromRoot(sim_context),
+            plant.GetPositions(plant.GetMyContextFromRoot(sim_context),
+                               plant.GetModelInstanceByName("NextageOpen")))
 
     # save and watch the sim
     visualizer.StartRecording(False)
@@ -718,15 +771,18 @@ def traced(func, ignoredirs=None):
 def main():
     config = {
             "object_initial_pose": "baseLink",
-            "end_effector_inital_pose": "RARM_JOINT5_Link",
+            "end_effector_initial_pose": "RARM_JOINT5_Link",
             "waypoint_frames": ['initial', 'prepick'],
+            "time_step": 0.002
             }
 
     robot_config = {
-            "robot_name": "NextageAOpen",
+            "robot_name": "NextageOpen",
             "kinematic_chain_start": "CHEST_JOINT0",
             "kinematic_chain_end": "RARM_JOINT5",
             "end_effector":  "RARM_JOINT5_Link",
+            "eef_dimension": 6,
+            "actuators": 15
             }
     nextage_control(config, robot_config)
 

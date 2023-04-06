@@ -36,7 +36,7 @@ from pydrake.all import (
     DifferentialInverseKinematicsIntegrator, AngleAxis, DrakeVisualizer,
     DifferentialInverseKinematicsParameters, TemplateSystem, Multiplexer,
     PiecewisePolynomial, PiecewiseQuaternionSlerp, Value, BasicVector_,
-    EventStatus, Quaternion)
+    EventStatus, Quaternion, StartMeshcat, MeshcatVisualizer)
 
 
 def make_gripper_position_trajectory(X_G, times):
@@ -369,6 +369,7 @@ class DifferentialIKSystem(LeafSystem):
 # The 0.0 is the "discrete time step". A value of 0.0 means that we have made this a continuous system
 # Note also, this constructor is overloaded (but this is not a thing you can do in python naturally. It is an artefact of the C++ port)
 time_step = 0.002
+meshcat = StartMeshcat()
 plant, scene_graph = AddMultibodyPlantSceneGraph(builder, time_step)
 
 # Load in the panda
@@ -379,6 +380,7 @@ parser = Parser(plant)
 panda_arm_hand_file = FindResourceOrThrow("drake/manipulation/models/franka_description/urdf/panda_arm_hand.urdf")
 brick_file = FindResourceOrThrow("drake/examples/manipulation_station/models/061_foam_brick.sdf")
 bin_file = FindResourceOrThrow("drake/examples/manipulation_station/models/bin.sdf")
+table_file = FindResourceOrThrow("drake/examples/manipulation_station/models/amazon_table_simplified.sdf")
 
 # Actually parse in the model
 panda = parser.AddModelFromFile(panda_arm_hand_file, model_name="panda")
@@ -398,16 +400,30 @@ brick_initial = RigidTransform([0.65, 0.5, 0.015])
 # plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("base_link"))
 
 # Add some bins
-bin_1 = parser.AddModelFromFile(bin_file, model_name="bin_1")
-plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("bin_base", bin_1))
+# bin_1 = parser.AddModelFromFile(bin_file, model_name="bin_1")
+# plant.WeldFrames(
+#     plant.world_frame(),
+#     plant.GetFrameByName("bin_base", bin_1))
 
-bin_2 = parser.AddModelFromFile(bin_file, model_name="bin_2")
-# plant.WeldFrames(plant.world_frame(), plant.GetFrameByName("bin_base", bin_2), X_PC=RigidTransform(np.array([0.65, 0.5, 0.0])))
+# bin_2 = parser.AddModelFromFile(bin_file, model_name="bin_2")
+# plant.WeldFrames(
+#     frame_on_parent_F=plant.world_frame(),
+#     frame_on_child_M=plant.GetFrameByName("bin_base", bin_2),
+#     X_FM=RigidTransform(np.array([0.65, 0.5, 0.0])))
+
+table = parser.AddModelFromFile(
+    table_file,
+    model_name='table')
 plant.WeldFrames(
     frame_on_parent_F=plant.world_frame(),
-    frame_on_child_M=plant.GetFrameByName("bin_base", bin_2),
-    X_FM=RigidTransform(np.array([0.65, 0.5, 0.0]))
-)
+    frame_on_child_M=plant.GetFrameByName("amazon_table", table),
+    X_FM=RigidTransform(
+        RollPitchYaw(
+            RotationMatrix.MakeXRotation(np.pi)),
+        np.array([0.55, 0.5, 0.0])).multiply(RigidTransform(
+            RollPitchYaw(
+                RotationMatrix.MakeZRotation(np.pi/2)),
+            np.array([0.0, 0.0, 0.0]))))
 
 # Important to do tidying work
 plant.Finalize()
@@ -417,9 +433,14 @@ temp_plant_context = plant.GetMyContextFromRoot(temp_context)
 desired_initial_state = np.array([0.0, 0.3, 0.0, -1.3, 0.0, 1.65, 0.9, 0.040, 0.040])
 plant.SetPositions(temp_plant_context, panda, desired_initial_state)
 
-traj_p_G, traj_R_G, traj_h = manual_pick_sketch(plant.EvalBodyPoseInWorld(temp_plant_context, plant.GetBodyByName("panda_hand")),
-                                                brick_initial,
-                                                RigidTransform(RotationMatrix.MakeZRotation(np.pi / 2.0), [0.0, 0.0, 0.015]))
+traj_p_G, traj_R_G, traj_h = manual_pick_sketch(
+    plant.EvalBodyPoseInWorld(
+        temp_plant_context,
+        plant.GetBodyByName("panda_hand")),
+    brick_initial,
+    RigidTransform(
+        RotationMatrix.MakeZRotation(np.pi / 2.0),
+        [0.0, 0.0, 0.015]))
 
 controller_plant = MultibodyPlant(time_step)
 controller_parser = Parser(controller_plant)
@@ -438,43 +459,83 @@ builder.Connect(plant.get_state_output_port(panda), traj_controller.get_input_po
 builder.Connect(traj_controller.get_output_port(), plant.get_actuation_input_port())
 ik_subsystem = traj_controller.GetSubsystemByName("Inverse Kinematics")
 
-scene_graph.AddRenderer("renderer", MakeRenderEngineVtk(RenderEngineVtkParams()))
-dv = DrakeVisualizer.AddToBuilder(builder, scene_graph)
-dv.set_name("visuals")
+# scene_graph.AddRenderer("renderer", MakeRenderEngineVtk(RenderEngineVtkParams()))
+# dv = DrakeVisualizer.AddToBuilder(builder, scene_graph)
+# dv.set_name("visuals")
 
+meshcat.Delete()
+visualizer = MeshcatVisualizer.AddToBuilder(
+    builder, scene_graph.GetOutputPort("query"), meshcat)
 diagram = builder.Build()
 diagram.set_name("pick_and_place")
 
-for i in np.linspace(0.02, 0.07, num=500):
-    simulator = Simulator(diagram)
-    sim_context = simulator.get_mutable_context()
+# CODE: alternate code to visualize in drake visualizer
 
-    plant_context = plant.GetMyMutableContextFromRoot(sim_context)
-    plant.SetPositions(plant_context, panda, desired_initial_state)
-    brick_body = plant.GetBodyByName("base_link", brick)
-    brick_body.SetMass(plant_context, i)
+# for i in np.linspace(0.02, 0.07, num=500):
+#     simulator = Simulator(diagram)
+#     sim_context = simulator.get_mutable_context()
+# 
+#     plant_context = plant.GetMyMutableContextFromRoot(sim_context)
+#     plant.SetPositions(plant_context, panda, desired_initial_state)
+#     brick_body = plant.GetBodyByName("base_link", brick)
+#     brick_body.SetMass(plant_context, i)
+# 
+#     print("Brick mass: ", brick_body.get_mass(plant_context))
+# 
+#     plant.SetFreeBodyPose(plant_context, brick_body, brick_initial)
+#     hand_frame = plant.GetFrameByName("panda_hand")
+#     ik_subsystem.SetPositions(
+#             ik_subsystem.GetMyMutableContextFromRoot(
+#                 simulator.get_mutable_context()),
+#             plant.GetPositions(plant_context, panda))
+# 
+#     state_traj = []
+#     def monitor_func(c):
+#         hand_translation = hand_frame.CalcPoseInWorld(plant_context).translation()
+#         brick_translation = brick_body.EvalPoseInWorld(plant_context).translation()
+#         state_traj.append((list(hand_translation), list(brick_translation)))
+#         # print(f"Hand: {hand_translation}, brick: {brick_translation}")
+#         return EventStatus.Succeeded()
+# 
+# 
+#     simulator.set_monitor(monitor_func)
+#     simulator.Initialize()
+#     start_time = time.time()
+#     simulator.AdvanceTo(traj_p_G.end_time())
+# 
+#     print(f"Time Taken: {time.time() - start_time}")
 
-    print("Brick mass: ", brick_body.get_mass(plant_context))
+# visualise in mehscat
+simulator = Simulator(diagram)
+sim_context = simulator.get_mutable_context()
 
-    plant.SetFreeBodyPose(plant_context, brick_body, brick_initial)
-    hand_frame = plant.GetFrameByName("panda_hand")
-    ik_subsystem.SetPositions(
-            ik_subsystem.GetMyMutableContextFromRoot(
-                simulator.get_mutable_context()),
-            plant.GetPositions(plant_context, panda))
+plant_context = plant.GetMyMutableContextFromRoot(sim_context)
+plant.SetPositions(plant_context, panda, desired_initial_state)
+brick_body = plant.GetBodyByName("base_link", brick)
+brick_body.SetMass(plant_context, 0.3)
 
-    state_traj = []
-    def monitor_func(c):
-        hand_translation = hand_frame.CalcPoseInWorld(plant_context).translation()
-        brick_translation = brick_body.EvalPoseInWorld(plant_context).translation()
-        state_traj.append((list(hand_translation), list(brick_translation)))
-        # print(f"Hand: {hand_translation}, brick: {brick_translation}")
-        return EventStatus.Succeeded()
+print("Brick mass: ", brick_body.get_mass(plant_context))
+
+plant.SetFreeBodyPose(plant_context, brick_body, brick_initial)
+hand_frame = plant.GetFrameByName("panda_hand")
+ik_subsystem.SetPositions(
+        ik_subsystem.GetMyMutableContextFromRoot(
+            simulator.get_mutable_context()),
+        plant.GetPositions(plant_context, panda))
+
+state_traj = []
+def monitor_func(c):
+    hand_translation = hand_frame.CalcPoseInWorld(plant_context).translation()
+    brick_translation = brick_body.EvalPoseInWorld(plant_context).translation()
+    state_traj.append((list(hand_translation), list(brick_translation)))
+    # print(f"Hand: {hand_translation}, brick: {brick_translation}")
+    return EventStatus.Succeeded()
 
 
-    simulator.set_monitor(monitor_func)
-    simulator.Initialize()
-    start_time = time.time()
-    simulator.AdvanceTo(traj_p_G.end_time())
-
-    print(f"Time Taken: {time.time() - start_time}")
+simulator.set_monitor(monitor_func)
+simulator.Initialize()
+start_time = time.time()
+visualizer.StartRecording(False)
+simulator.AdvanceTo(traj_p_G.end_time())
+visualizer.PublishRecording()
+print(f"Time Taken: {time.time() - start_time}")
